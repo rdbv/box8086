@@ -6,6 +6,7 @@ BIN_DIR=bin
 SRC_DIR=src
 CPU_DIR=$(SRC_DIR)/CPU
 
+#tt
 
 all: CPU Memory main
 
@@ -17,10 +18,6 @@ main:
 GUI:
 	# Compiling GUI
 	@$(CC) $(CFLAGS) -O3 $(SRC_DIR)/ConsoleGUI/GUI.cpp -o bin/main bin/Memory.o bin/CPU.o bin/Dis.o bin/Out.o -lncurses
-NcursesWrap:
-	# Compiling NCWrap
-	@$(CC) $(CFLAGS) $(SRC_DIR)/ConsoleGUI/NcursesWrap.cc -c -o bin/NWrap.o 
-	@$(CC) $(CFLAGS) $(SRC_DIR)/ConsoleGUI/GUI.cpp -o bin/main bin/Memory.o bin/CPU.o bin/NWrap.o -lncurses
 
 CPU:
 	# Compiling CPU
@@ -40,13 +37,9 @@ Disasm:
 # Tests stuff
 testbin:
 	nasm -f bin $(CPU_DIR)/testbin.asm -o $(BIN_DIR)/test.bin
+
 bochs:
 	nasm -f bin ../bochs.asm -o $(BIN_DIR)/test.bin
 
 
-tests: CPU_Test0
 
-# Tests
-CPU_Test0:
-	# Compiling CPU_Test0
-	@$(CC) $(CFLAGS) $(CPU_DIR)/Tests/CPU_Test0.cpp $(LINK) -o $(BIN_DIR)/main -lboost_unit_test_framework
