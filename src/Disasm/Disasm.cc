@@ -646,7 +646,7 @@ void Disasm::disasmFromModRM(bool toRegister, bool isWord, InstrString& ins) {
 
     char buf[32] = {0};
 
-    if(mod.mode == NO_DISPLACEMENT && mod.rm == SWORD) {
+    if(mod.mode == NO_DISPLACEMENT && mod.rm == UWORD) {
         uint16_t v = mem[insByte()+3] << 8 | mem[insByte()+2];
         sprintf(buf, "0x%x", v);
         ins.disp = buf;

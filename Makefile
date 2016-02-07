@@ -44,7 +44,7 @@ clean:
 
 CPU_vim: CPU GUI
 Memory_vim: Memory GUI
-Disasm_vim: Disasm GUI
+Disasm_vim: Disasm main
 
 #######################################################################
 

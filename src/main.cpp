@@ -25,7 +25,7 @@ uint8_t* loadFile(const std::string& fileName, unsigned int* fileSize) {
 
 int main() {
    
-    unsigned int fileSize;
+/*    unsigned int fileSize;
     ubyte* bytes = loadFile("bin/test.bin", &fileSize);
 //    CPU cpu;
 //    Memory* mem = cpu.getMemory(); 
@@ -33,7 +33,7 @@ int main() {
 
 //    cpu.runTest();
 
-
+*/
 
     Disasm dis;
     dis.bindMem(bytes);

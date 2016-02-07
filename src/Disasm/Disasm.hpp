@@ -10,74 +10,77 @@
 
 #include "../CPU/CPU.hpp"
 
-static std::unordered_map<uint8_t, std::unordered_map<uint8_t, std::string>> mrm {
+typedef std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> ModRMStrings;
+typedef std::unordered_map<bool, std::unordered_map<ubyte, std::string>> RegisterMapStrings;
+
+static ModRMStrings mrm {
     { 
         NO_DISPLACEMENT,
         {
-            {0b000, "[BX+SI]"},
-            {0b001, "[BX+DI]"},
-            {0b010, "[BP+SI]"},
-            {0b011, "[BP+DI]"},
-            {0b100, "[SI]"},
-            {0b101, "[DI]"},
-            {0b110, "["},
-            {0b111, "[BX]"},
+            {BX_SI, "[BX+SI]"},
+            {BX_DI, "[BX+DI]"},
+            {BP_SI, "[BP+SI]"},
+            {BP_DI, "[BP+DI]"},
+            {SI, "[SI]"},
+            {DI, "[DI]"},
+            {UWORD, "["},
+            {BX, "[BX]"},
         }
     },
     { 
         BYTE_DISPLACEMENT,
         {
-            {0b000, "[BX+SI"},
-            {0b001, "[BX+DI"},
-            {0b010, "[BP+SI"},
-            {0b011, "[BP+DI"},
-            {0b100, "[SI"},
-            {0b101, "[DI"},
-            {0b110, "[BP"},
-            {0b111, "[BX"},
+            {BX_SI, "[BX+SI"},
+            {BX_DI, "[BX+DI"},
+            {BP_SI, "[BP+SI"},
+            {BP_DI, "[BP+DI"},
+            {SI, "[SI"},
+            {DI, "[DI"},
+            {BP, "[BP"},
+            {BX, "[BX"},
         }
     },
     { 
         WORD_DISPLACEMENT,
         {
-            {0b000, "[BX+SI"},
-            {0b001, "[BX+DI"},
-            {0b010, "[BP+SI"},
-            {0b011, "[BP+DI"},
-            {0b100, "[SI"},
-            {0b101, "[DI"},
-            {0b110, "["},
-            {0b111, "[BX"},
+            {BX_SI, "[BX+SI"},
+            {BX_DI, "[BX+DI"},
+            {BP_SI, "[BP+SI"},
+            {BP_DI, "[BP+DI"},
+            {SI, "[SI"},
+            {DI, "[DI"},
+            {BP, "[BP"},
+            {BX, "[BX"},
 
         }
     }
 };
 
-static std::unordered_map<bool, std::unordered_map<uint8_t, std::string>> regs {
+static RegisterMapStrings regs {
     {
        false,
        {
-           {0b000, "AL"},
-           {0b001, "CL"},
-           {0b010, "DL"},
-           {0b011, "BL"},
-           {0b100, "AH"},
-           {0b101, "CH"},
-           {0b110, "DH"},
-           {0b111, "BH"},
+           {AL_AX, "AL"},
+           {CL_CX, "CL"},
+           {DL_DX, "DL"},
+           {BL_BX, "BL"},
+           {AH_SP, "AH"},
+           {CH_BP, "CH"},
+           {DH_SI, "DH"},
+           {BH_DI, "BH"},
        }
     },
     {
         true,
         {
-           {0b000, "AX"},
-           {0b001, "CX"},
-           {0b010, "DX"},
-           {0b011, "BX"},
-           {0b100, "SP"},
-           {0b101, "BP"},
-           {0b110, "SI"},
-           {0b111, "DI"}, 
+           {AL_AX, "AX"},
+           {CL_CX, "CX"},
+           {DL_DX, "DX"},
+           {BL_BX, "BX"},
+           {AH_SP, "SP"},
+           {CH_BP, "BP"},
+           {DH_SI, "SI"},
+           {BH_DI, "DI"}, 
         }
     }
 };

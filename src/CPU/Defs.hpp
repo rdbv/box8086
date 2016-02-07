@@ -17,7 +17,6 @@ typedef uint16_t uword;
 typedef int32_t  sdword;
 typedef uint32_t dword;
 
-#define SCANF char ___[8];scanf("%s", ___);
 
 /* Prefixes opcodes */
 #define ES_OVR      0x26
@@ -41,7 +40,7 @@ typedef uint32_t dword;
 #define BP_DI       0b011
 #define SI          0b100
 #define DI          0b101
-#define SWORD       0b110
+#define UWORD       0b110
 #define BP          0b110
 #define BX          0b111
 

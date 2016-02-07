@@ -1,38 +1,40 @@
 #include "CPU.hpp"
 
-/* Interface */
+/* Return pointer to memory used by emulator */
 
 Memory* CPU::getMemory() {
     return &memory;
 }
 
+/* Return actual state of registers */
+
 Registers CPU::getRegisters() {
     return regs;
 }
 
-
-void CPU::runTest() {
-    while(true) {
-
-        fetch();
-        execute();
-        dumpMem(); 
-        SCANF; 
-    }
-}
+/* 
+ * Do a hardware step,
+ * This is NOT Trap Flag step
+ */
 
 void CPU::step() {
     fetch();
     execute();
 }
 
+/* 
+ * Clear helper structs, check/set overrides,
+ * And set helper IPReal to byte with skipped override bytes
+ */
+
 void CPU::fetch() {
-    mod.reset();
-    ovrd.reset();
+    mod.clear();
+    ovrd.clear();
     ovrd.setOverrides(getAbs(regs.cs, regs.ip), &memory[0]);
     IPReal = getAbs(regs.cs, regs.ip) + ovrd.getOverrideCount();
 }
 
+/* Just execute */
 void CPU::execute() {
 
     switch(memory[IPReal])
@@ -609,35 +611,7 @@ void CPU::execute() {
 
 }
 
-void CPU::setOverrides() {    
-    
-    unsigned int counter = getAbs(regs.cs, regs.ip); 
-    enum regOvrType { REGISTER_OVERRIDE, REP_OVERRIDE, LOCK_OVERRIDE, NOT_OVERRIDE };
-
-    auto isOverrideOpcode = [this, &counter]() {
-        if(memory[counter] == CS_OVR || memory[counter] == DS_OVR ||
-           memory[counter] == ES_OVR || memory[counter] == SS_OVR) 
-                return REGISTER_OVERRIDE;
-        
-        if(memory[counter] == REPZ_OVR || memory[counter] == REPNZ_OVR)
-                return REP_OVERRIDE;
-       
-        if(memory[counter] == LOCK_OVR)
-                return LOCK_OVERRIDE;
-       
-        return NOT_OVERRIDE;
-    };
-    
-    regOvrType ovr;
-    
-    while( (ovr = isOverrideOpcode()) != NOT_OVERRIDE ) {        
-        if(ovr == REGISTER_OVERRIDE) ovrd.regOverride  = memory[counter];
-        if(ovr == REP_OVERRIDE)      ovrd.repOverride  = memory[counter];
-        if(ovr == LOCK_OVERRIDE)     ovrd.lockOverride = memory[counter];
-        counter++;
-    }
-
-}
+/* If instruction had overrided segment, return it */
 
 uword CPU::getOverridedSegmentValue() {
 
@@ -658,38 +632,18 @@ uword CPU::getOverridedSegmentValue() {
 
 }
 
-uword CPU::getFullInstructionSizeModRM() {
-    int overrideCount = ovrd.getOverrideCount();
-    switch(mod.mode.to_ulong()) {
-        // <op>, <mod_rm>  
-        case REGISTER_MODE:
-            return 2 + overrideCount;
-        
-        // special case in this mode
-        // e.g mov [0xface], ax -> <op>, <mod>, <0xce>, <0xfa>
-        case NO_DISPLACEMENT:
-            if(mod.rm == SWORD)
-                return 4 + overrideCount;
-            else
-                return 2 + overrideCount;
-        
-        // op, <mod>, <dis_msb> 
-        case BYTE_DISPLACEMENT:
-            return 3 + overrideCount;
-        
-        // <op>, <mod>, <dis_lsb>, <dis_msb> 
-        case WORD_DISPLACEMENT:
-            return 4 + overrideCount;
-        default:
-            assert(false);
-    }
-}
+/* 
+ * Get absolute address in memory from ModRM byte,
+ * mov [bx+si], al | assuming bx=5, si = 5, return = 10
+ */
 
 dword CPU::getAbsoluteAddressModRM() {
+    
     assert(mod.mode != REGISTER_MODE);
+    
     uword absAddr = 0;
 
-    if(mod.mode == NO_DISPLACEMENT && mod.rm == SWORD)
+    if(mod.mode == NO_DISPLACEMENT && mod.rm == UWORD)
         return getAbs(getOverridedSegmentValue(), memory.getRawData<uword, 3, 2>(IPReal));
 
     switch(mod.rm.to_ulong()) {
@@ -732,6 +686,7 @@ dword CPU::getAbsoluteAddressModRM() {
     if(mod.mode == WORD_DISPLACEMENT) absAddr += memory.getRawData<sword, 3, 2>(IPReal);
 
     return getAbs(getOverridedSegmentValue(), absAddr);
+
 }
 
 template<bool toReg, bool isWord>
