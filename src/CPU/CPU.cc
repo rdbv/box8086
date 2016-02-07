@@ -29,7 +29,6 @@ void CPU::step() {
 void CPU::fetch() {
     mod.reset();
     ovrd.reset();
-    //setOverrides(); 
     ovrd.setOverrides(getAbs(regs.cs, regs.ip), &memory[0]);
     IPReal = getAbs(regs.cs, regs.ip) + ovrd.getOverrideCount();
 }
