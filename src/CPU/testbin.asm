@@ -1,10 +1,6 @@
 cpu 8086
 
 
-
-
-add al, 0x23
-lock add ax, 0xface
-nop
-
+mov ax, 0x2333
+mov bl, 0x13
 

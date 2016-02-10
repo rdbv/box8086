@@ -24,6 +24,9 @@ GUI:
 	# Compiling GUI
 	@$(CC) $(CFLAGS) $(CGUI_DIR)/GUI.cpp -o bin/main $(MAIN_LINK) -lncurses
 
+GTK_GUI:
+	@$(CC) $(CFLAGS) $(CGUI_DIR)/GTK_GUI.cpp -o bin/main $(MAIN_LINK) `pkg-config --libs --cflags gtk+-2.0`
+
 CPU:
 	# Compiling CPU
 	@$(CC) $(CFLAGS) $(CPU_DIR)/CPU.cc -c -o bin/CPU.o 
@@ -45,6 +48,10 @@ clean:
 CPU_vim: CPU GUI
 Memory_vim: Memory GUI
 Disasm_vim: Disasm main
+GTK_GUI_vim: GTK_GUI 
+testbin_vim: testbin
+Opcodes_vim: Disasm main
+main_vim: main
 
 #######################################################################
 

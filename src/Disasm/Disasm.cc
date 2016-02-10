@@ -1,630 +1,79 @@
 #include "Disasm.hpp" 
 
+/* Bind memory with code */
 
-void Disasm::bindMem(uint8_t* _mem) {
-
-    assert( _mem != nullptr );
-    mem = _mem;
-
+void Disasm::bindMemory(ubyte* mem) {
+    
+    assert(mem != nullptr);
+    memory = mem;
 }
 
-Instructions Disasm::disasmCount(unsigned int start, unsigned int cnt) {
+std::vector<std::string> Disasm::disasmN(unsigned int AbsAddr, unsigned int Count) {
+    assert(AbsAddr < DEFAULT_MEMORY_SIZE);
 
-    Instructions in;
-    pos = start;
-   
-    for(unsigned int i=0;i<cnt;++i) { 
-        in.push_back(disasm());    
-   
-        printf("I:%s Lhs:%s Rhs:%s Disp:%c%s ArgCount:%d\n", 
-                in[i].instr.c_str(), in[i].lhs.c_str(), 
-                in[i].rhs.c_str(),
-                in[i].dispSign, in[i].disp.c_str(),
-                in[i].argType );
+    std::vector<std::string> instr;
+    position = AbsAddr;
 
+    for(unsigned int i=0;i<Count;++i) {
+        instr.push_back(disasm());
+        printf("X:%s\n", instr[i].c_str());
     }
 
-
-    return in;
+    return instr;
 }
 
+std::string Disasm::disasm() {
+    std::string inst;
 
-InstrString Disasm::disasm() {
-  
-    ovrd.reset();
+    ovr.clear();
+    ovr.setOverrides(position, memory);
+    position += ovr.getOverrideCount();
+
+    ubyte opByte = memory[position];
+    Opcode opData = opcodes[opByte];
+
+    inst += opData.instr;
+
+    if(opData.enc == ONE_BYTE_ENC || opData.enc == REG_REG_ENC) position++;
+
+    if(opData.enc == MODRM_ENC || opData.enc == MODRM_MEM_ENC) {
+        mod.decode(memory[position+1]);
+        disasmModRM(TO_REGISTER(opByte), IS_WORD(opByte), opData.enc == MODRM_MEM_ENC , inst);
+        position += mod.getModInstrSize(0);
+    }
+    if(opData.enc == MODRM_SEG_ENC) {
+        mod.decode(memory[position+1]);
+        disasmModRMSeg(TO_REGISTER(opByte), inst);
+        position += mod.getModInstrSize(0);
+    }
+    if(opData.enc == IMM_ENC) {
+        disasmImm(opData.lhs == IMM_IV, inst);
+        position += (opData.lhs == IMM_IV)?3:2;
+    }
+    if(opData.enc == REG_IMM_ENC) {
+        disasmRegImm(opData.rhs == IMM_IV, opData.lhs, inst);
+        position += (opData.rhs == IMM_IV)?3:2;
+    }
+
+    return inst;
+
+}
+
+void Disasm::disasmImm(bool isWord, std::string& instr) {
+
+    char buf[32] = {0};
+    if(!isWord) sprintf(buf, "%#x", memory[position+1]);
+    else sprintf(buf, "%#x", memory[position+2] << 8 | memory[position+1]);
+
+    instr += " " + std::string(buf);
+}
+
+void Disasm::disasmModRM(bool toRegister, bool isWord, bool isMemOperation, std::string& instr) {
+
     InstrString ins;
-    ovrd.setOverrides(pos, mem);
-    skip = ovrd.getOverrideCount();
-    unsigned char op = mem[pos+skip];
-
-    //printf("Skip:%d Pos:%d %x\n", skip, pos, op);
-
-    switch(op)
-    {
-        case 0x00:	//00 ADD Eb Gb 
-            modRmOp(false, false, "ADD", ins);
-        break;
-        case 0x01:	//01 ADD Ev Gv 
-            modRmOp(false, true, "ADD", ins); 
-        break;
-        case 0x02:	//02 ADD Gb Eb 
-            modRmOp(true, false, "ADD", ins); 
-        break;
-        case 0x03:	//03 ADD Gv Ev 
-            modRmOp(true, true, "ADD", ins); 
-        break;
-        case 0x04:	//04 ADD AL Ib 
-            alaxImm("ADD", 2, ins);  
-        break;
-        case 0x05:	//05 ADD eAX Iv 
-            alaxImm("ADD", 3, ins); 
-        break;
-        case 0x06:	//06 PUSH ES 
-            ins.instr = "PUSH";
-            ins.lhs = "ES";
-            ins.argType = ARG_ONLY_LHS; 
-            pos += skip + 1;
-        break;
-        case 0x07:	//07 POP ES 
-            ins.instr = "POP";
-            ins.lhs = "ES";
-            ins.argType = ARG_ONLY_LHS;
-            pos += skip + 1;
-        break;
-        case 0x08:	//08 OR Eb Gb 
-            modRmOp(false, false, "OR", ins);
-        break;
-        case 0x09:	//09 OR Ev Gv 
-            modRmOp(false, true, "OR", ins);
-        break;
-        case 0x0A:	//0A OR Gb Eb 
-            modRmOp(true, false, "OR", ins);
-        break;
-        case 0x0B:	//0B OR Gv Ev 
-            modRmOp(true, true, "OR", ins); 
-        break;
-        case 0x0C:	//0C OR AL Ib 
-            alaxImm("OR", 2, ins);
-        break;
-        case 0x0D:	//0D OR eAX Iv 
-            alaxImm("OR", 3, ins); 
-        break;
-        case 0x0E:	//0E PUSH CS 
-            ins.instr = "PUSH";
-            ins.lhs = "CS";
-            ins.argType = ARG_ONLY_LHS;
-            pos += skip + 1;
-        break;
-        case 0x0F:	//0F -- 
-        break;
-        case 0x10:	//10 ADC Eb Gb 
-            modRmOp(false, false, "ADC", ins); 
-        break;
-        case 0x11:	//11 ADC Ev Gv 
-            modRmOp(false, true, "ADC", ins); 
-        break;
-        case 0x12:	//12 ADC Gb Eb 
-            modRmOp(true, false, "ADC", ins); 
-        break;
-        case 0x13:	//13 ADC Gv Ev 
-            modRmOp(true, true, "ADC", ins); 
-        break;
-        case 0x14:	//14 ADC AL Ib 
-            alaxImm("ADC", 2, ins); 
-        break;
-        case 0x15:	//15 ADC eAX Iv 
-            alaxImm("ADC", 3, ins); 
-        break;
-        case 0x16:	//16 PUSH SS 
-            ins.instr = "PUSH";
-            ins.lhs = "SS";
-            ins.argType = ARG_ONLY_LHS;
-            pos += skip + 1;
-        break;
-        case 0x17:	//17 POP SS 
-            ins.instr = "POP";
-            ins.lhs = "SS";
-            ins.argType = ARG_ONLY_LHS;
-            pos += skip + 1;
-        break;
-        case 0x18:	//18 SBB Eb Gb 
-            modRmOp(false, false, "SBB", ins); 
-        break;
-        case 0x19:	//19 SBB Ev Gv 
-            modRmOp(false, true, "SBB", ins);  
-        break;
-        case 0x1A:	//1A SBB Gb Eb 
-            modRmOp(true, false, "ADC", ins); 
-        break;
-        case 0x1B:	//1B SBB Gv Ev 
-            modRmOp(true, true, "ADC", ins); 
-        break;
-        case 0x1C:	//1C SBB AL Ib 
-            alaxImm("SBB", 2, ins); 
-        break;
-        case 0x1D:	//1D SBB eAX Iv 
-            alaxImm("SBB", 3, ins); 
-        break;
-        case 0x1E:	//1E PUSH DS 
-            ins.instr = "PUSH";
-            ins.lhs = "DS";
-            ins.argType = ARG_ONLY_LHS;
-            pos += skip + 1;
-        break;
-        case 0x1F:	//1F POP DS 
-            ins.instr = "POP";
-            ins.lhs = "DS";
-            ins.argType = ARG_ONLY_LHS;
-            pos += skip + 1;
-        break;
-        case 0x20:	//20 AND Eb Gb 
-            modRmOp(0, 0, "AND", ins); 
-        break;
-        case 0x21:	//21 AND Ev Gv 
-            modRmOp(0, 1, "AND", ins); 
-        break;
-        case 0x22:	//22 AND Gb Eb 
-            modRmOp(1, 0, "AND", ins); 
-        break;
-        case 0x23:	//23 AND Gv Ev 
-            modRmOp(1, 1, "AND", ins); 
-        break;
-        case 0x24:	//24 AND AL Ib 
-            alaxImm("AND", 2, ins); 
-        break;
-        case 0x25:	//25 AND eAX Iv 
-            alaxImm("AND", 3, ins);  
-        break;
-        case 0x26:	//26 ES: 
-        break;
-        case 0x27:	//27 DAA 
-        break;
-        case 0x28:	//28 SUB Eb Gb 
-        break;
-        case 0x29:	//29 SUB Ev Gv 
-        break;
-        case 0x2A:	//2A SUB Gb Eb 
-        break;
-        case 0x2B:	//2B SUB Gv Ev 
-        break;
-        case 0x2C:	//2C SUB AL Ib 
-        break;
-        case 0x2D:	//2D SUB eAX Iv 
-        break;
-        case 0x2E:	//2E CS: 
-        break;
-        case 0x2F:	//2F DAS 
-        break;
-        case 0x30:	//30 XOR Eb Gb 
-        break;
-        case 0x31:	//31 XOR Ev Gv 
-        break;
-        case 0x32:	//32 XOR Gb Eb 
-        break;
-        case 0x33:	//33 XOR Gv Ev 
-        break;
-        case 0x34:	//34 XOR AL Ib 
-        break;
-        case 0x35:	//35 XOR eAX Iv 
-        break;
-        case 0x36:	//36 SS: 
-        break;
-        case 0x37:	//37 AAA 
-        break;
-        case 0x38:	//38 CMP Eb Gb 
-        break;
-        case 0x39:	//39 CMP Ev Gv 
-        break;
-        case 0x3A:	//3A CMP Gb Eb 
-        break;
-        case 0x3B:	//3B CMP Gv Ev 
-        break;
-        case 0x3C:	//3C CMP AL Ib 
-        break;
-        case 0x3D:	//3D CMP eAX Iv 
-        break;
-        case 0x3E:	//3E DS: 
-        break;
-        case 0x3F:	//3F AAS 
-        break;
-        case 0x40:	//40 INC eAX 
-        break;
-        case 0x41:	//41 INC eCX 
-        break;
-        case 0x42:	//42 INC eDX 
-        break;
-        case 0x43:	//43 INC eBX 
-        break;
-        case 0x44:	//44 INC eSP 
-        break;
-        case 0x45:	//45 INC eBP 
-        break;
-        case 0x46:	//46 INC eSI 
-        break;
-        case 0x47:	//47 INC eDI 
-        break;
-        case 0x48:	//48 DEC eAX 
-        break;
-        case 0x49:	//49 DEC eCX 
-        break;
-        case 0x4A:	//4A DEC eDX 
-        break;
-        case 0x4B:	//4B DEC eBX 
-        break;
-        case 0x4C:	//4C DEC eSP 
-        break;
-        case 0x4D:	//4D DEC eBP 
-        break;
-        case 0x4E:	//4E DEC eSI 
-        break;
-        case 0x4F:	//4F DEC eDI 
-        break;
-        case 0x50:	//50 PUSH eAX 
-        break;
-        case 0x51:	//51 PUSH eCX 
-        break;
-        case 0x52:	//52 PUSH eDX 
-        break;
-        case 0x53:	//53 PUSH eBX 
-        break;
-        case 0x54:	//54 PUSH eSP 
-        break;
-        case 0x55:	//55 PUSH eBP 
-        break;
-        case 0x56:	//56 PUSH eSI 
-        break;
-        case 0x57:	//57 PUSH eDI 
-        break;
-        case 0x58:	//58 POP eAX 
-        break;
-        case 0x59:	//59 POP eCX 
-        break;
-        case 0x5A:	//5A POP eDX 
-        break;
-        case 0x5B:	//5B POP eBX 
-        break;
-        case 0x5C:	//5C POP eSP 
-        break;
-        case 0x5D:	//5D POP eBP 
-        break;
-        case 0x5E:	//5E POP eSI 
-        break;
-        case 0x5F:	//5F POP eDI 
-        break;
-        case 0x60:	//60 -- 
-        break;
-        case 0x61:	//61 -- 
-        break;
-        case 0x62:	//62 -- 
-        break;
-        case 0x63:	//63 -- 
-        break;
-        case 0x64:	//64 -- 
-        break;
-        case 0x65:	//65 -- 
-        break;
-        case 0x66:	//66 -- 
-        break;
-        case 0x67:	//67 -- 
-        break;
-        case 0x68:	//68 -- 
-        break;
-        case 0x69:	//69 -- 
-        break;
-        case 0x6A:	//6A -- 
-        break;
-        case 0x6B:	//6B -- 
-        break;
-        case 0x6C:	//6C -- 
-        break;
-        case 0x6D:	//6D -- 
-        break;
-        case 0x6E:	//6E -- 
-        break;
-        case 0x6F:	//6F -- 
-        break;
-        case 0x70:	//70 JO Jb 
-        break;
-        case 0x71:	//71 JNO Jb 
-        break;
-        case 0x72:	//72 JB Jb 
-        break;
-        case 0x73:	//73 JNB Jb 
-        break;
-        case 0x74:	//74 JZ Jb 
-        break;
-        case 0x75:	//75 JNZ Jb 
-        break;
-        case 0x76:	//76 JBE Jb 
-        break;
-        case 0x77:	//77 JA Jb 
-        break;
-        case 0x78:	//78 JS Jb 
-        break;
-        case 0x79:	//79 JNS Jb 
-        break;
-        case 0x7A:	//7A JPE Jb 
-        break;
-        case 0x7B:	//7B JPO Jb 
-        break;
-        case 0x7C:	//7C JL Jb 
-        break;
-        case 0x7D:	//7D JGE Jb 
-        break;
-        case 0x7E:	//7E JLE Jb 
-        break;
-        case 0x7F:	//7F JG Jb 
-        break;
-        case 0x80:	//80 GRP1 Eb Ib 
-        break;
-        case 0x81:	//81 GRP1 Ev Iv 
-        break;
-        case 0x82:	//82 GRP1 Eb Ib 
-        break;
-        case 0x83:	//83 GRP1 Ev Ib 
-        break;
-        case 0x84:	//84 TEST Gb Eb 
-        break;
-        case 0x85:	//85 TEST Gv Ev 
-        break;
-        case 0x86:	//86 XCHG Gb Eb 
-        break;
-        case 0x87:	//87 XCHG Gv Ev 
-        break;
-        case 0x88:	//88 MOV Eb Gb 
-        break;
-        case 0x89:	//89 MOV Ev Gv 
-        break;
-        case 0x8A:	//8A MOV Gb Eb 
-        break;
-        case 0x8B:	//8B MOV Gv Ev 
-        break;
-        case 0x8C:	//8C MOV Ew Sw 
-        break;
-        case 0x8D:	//8D LEA Gv M 
-        break;
-        case 0x8E:	//8E MOV Sw Ew 
-        break;
-        case 0x8F:	//8F POP Ev 
-        break;
-        case 0x90:	//90 NOP 
-            ins.instr = "NOP";
-            pos += skip + 1;
-        break;
-        case 0x91:	//91 XCHG eCX eAX 
-        break;
-        case 0x92:	//92 XCHG eDX eAX 
-        break;
-        case 0x93:	//93 XCHG eBX eAX 
-        break;
-        case 0x94:	//94 XCHG eSP eAX 
-        break;
-        case 0x95:	//95 XCHG eBP eAX 
-        break;
-        case 0x96:	//96 XCHG eSI eAX 
-        break;
-        case 0x97:	//97 XCHG eDI eAX 
-        break;
-        case 0x98:	//98 CBW 
-        break;
-        case 0x99:	//99 CWD 
-        break;
-        case 0x9A:	//9A CALL Ap 
-        break;
-        case 0x9B:	//9B WAIT 
-        break;
-        case 0x9C:	//9C PUSHF 
-        break;
-        case 0x9D:	//9D POPF 
-        break;
-        case 0x9E:	//9E SAHF 
-        break;
-        case 0x9F:	//9F LAHF 
-        break;
-        case 0xA0:	//A0 MOV AL Ob 
-        break;
-        case 0xA1:	//A1 MOV eAX Ov 
-        break;
-        case 0xA2:	//A2 MOV Ob AL 
-        break;
-        case 0xA3:	//A3 MOV Ov eAX 
-        break;
-        case 0xA4:	//A4 MOVSB 
-        break;
-        case 0xA5:	//A5 MOVSW 
-        break;
-        case 0xA6:	//A6 CMPSB 
-        break;
-        case 0xA7:	//A7 CMPSW 
-        break;
-        case 0xA8:	//A8 TEST AL Ib 
-        break;
-        case 0xA9:	//A9 TEST eAX Iv 
-        break;
-        case 0xAA:	//AA STOSB 
-        break;
-        case 0xAB:	//AB STOSW 
-        break;
-        case 0xAC:	//AC LODSB 
-        break;
-        case 0xAD:	//AD LODSW 
-        break;
-        case 0xAE:	//AE SCASB 
-        break;
-        case 0xAF:	//AF SCASW 
-        break;
-        case 0xB0:	//B0 MOV AL Ib 
-        break;
-        case 0xB1:	//B1 MOV CL Ib 
-        break;
-        case 0xB2:	//B2 MOV DL Ib 
-        break;
-        case 0xB3:	//B3 MOV BL Ib 
-        break;
-        case 0xB4:	//B4 MOV AH Ib 
-        break;
-        case 0xB5:	//B5 MOV CH Ib 
-        break;
-        case 0xB6:	//B6 MOV DH Ib 
-        break;
-        case 0xB7:	//B7 MOV BH Ib 
-        break;
-        case 0xB8:	//B8 MOV eAX Iv 
-        break;
-        case 0xB9:	//B9 MOV eCX Iv 
-        break;
-        case 0xBA:	//BA MOV eDX Iv 
-        break;
-        case 0xBB:	//BB MOV eBX Iv 
-        break;
-        case 0xBC:	//BC MOV eSP Iv 
-        break;
-        case 0xBD:	//BD MOV eBP Iv 
-        break;
-        case 0xBE:	//BE MOV eSI Iv 
-        break;
-        case 0xBF:	//BF MOV eDI Iv 
-        break;
-        case 0xC0:	//C0 -- 
-        break;
-        case 0xC1:	//C1 -- 
-        break;
-        case 0xC2:	//C2 RET Iw 
-        break;
-        case 0xC3:	//C3 RET 
-        break;
-        case 0xC4:	//C4 LES Gv Mp 
-        break;
-        case 0xC5:	//C5 LDS Gv Mp 
-        break;
-        case 0xC6:	//C6 MOV Eb Ib 
-        break;
-        case 0xC7:	//C7 MOV Ev Iv 
-        break;
-        case 0xC8:	//C8 -- 
-        break;
-        case 0xC9:	//C9 -- 
-        break;
-        case 0xCA:	//CA RETF Iw 
-        break;
-        case 0xCB:	//CB RETF 
-        break;
-        case 0xCC:	//CC INT 3 
-        break;
-        case 0xCD:	//CD INT Ib 
-        break;
-        case 0xCE:	//CE INTO 
-        break;
-        case 0xCF:	//CF IRET 
-        break;
-        case 0xD0:	//D0 GRP2 Eb 1 
-        break;
-        case 0xD1:	//D1 GRP2 Ev 1 
-        break;
-        case 0xD2:	//D2 GRP2 Eb CL 
-        break;
-        case 0xD3:	//D3 GRP2 Ev CL 
-        break;
-        case 0xD4:	//D4 AAM I0 
-        break;
-        case 0xD5:	//D5 AAD I0 
-        break;
-        case 0xD6:	//D6 -- 
-        break;
-        case 0xD7:	//D7 XLAT 
-        break;
-        case 0xD8:	//D8 -- 
-        break;
-        case 0xD9:	//D9 -- 
-        break;
-        case 0xDA:	//DA -- 
-        break;
-        case 0xDB:	//DB -- 
-        break;
-        case 0xDC:	//DC -- 
-        break;
-        case 0xDD:	//DD -- 
-        break;
-        case 0xDE:	//DE -- 
-        break;
-        case 0xDF:	//DF -- 
-        break;
-        case 0xE0:	//E0 LOOPNZ Jb 
-        break;
-        case 0xE1:	//E1 LOOPZ Jb 
-        break;
-        case 0xE2:	//E2 LOOP Jb 
-        break;
-        case 0xE3:	//E3 JCXZ Jb 
-        break;
-        case 0xE4:	//E4 IN AL Ib 
-        break;
-        case 0xE5:	//E5 IN eAX Ib 
-        break;
-        case 0xE6:	//E6 OUT Ib AL 
-        break;
-        case 0xE7:	//E7 OUT Ib eAX 
-        break;
-        case 0xE8:	//E8 CALL Jv 
-        break;
-        case 0xE9:	//E9 JMP Jv 
-        break;
-        case 0xEA:	//EA JMP Ap 
-        break;
-        case 0xEB:	//EB JMP Jb 
-        break;
-        case 0xEC:	//EC IN AL DX 
-        break;
-        case 0xED:	//ED IN eAX DX 
-        break;
-        case 0xEE:	//EE OUT DX AL 
-        break;
-        case 0xEF:	//EF OUT DX eAX 
-        break;
-        case 0xF0:	//F0 LOCK 
-        break;
-        case 0xF1:	//F1 -- 
-        break;
-        case 0xF2:	//F2 REPNZ 
-        break;
-        case 0xF3:	//F3 REPZ 
-        break;
-        case 0xF4:	//F4 HLT 
-        break;
-        case 0xF5:	//F5 CMC 
-        break;
-        case 0xF6:	//F6 GRP3a Eb 
-        break;
-        case 0xF7:	//F7 GRP3b Ev 
-        break;
-        case 0xF8:	//F8 CLC 
-        break;
-        case 0xF9:	//F9 STC 
-        break;
-        case 0xFA:	//FA CLI 
-        break;
-        case 0xFB:	//FB STI 
-        break;
-        case 0xFC:	//FC CLD 
-        break;
-        case 0xFD:	//FD STD 
-        break;
-        case 0xFE:	//FE GRP4 Eb 
-        break;
-        case 0xFF:	//FF GRP5 Ev 
-        break;
-
-    };
-
-    return ins;
-
-}
-
-void Disasm::disasmFromModRM(bool toRegister, bool isWord, InstrString& ins) {
-
-    ins.argType = 2;
-
-    if(mod.mode == 0b11) {
+    auto overrides = getOverrides();
+    
+    if(mod.mode == REGISTER_MODE) {
         if(!toRegister) {
             ins.lhs = regs[isWord][mod.rm.to_ulong()];
             ins.rhs = regs[isWord][mod.reg.to_ulong()];
@@ -633,64 +82,107 @@ void Disasm::disasmFromModRM(bool toRegister, bool isWord, InstrString& ins) {
             ins.lhs = regs[isWord][mod.reg.to_ulong()];
             ins.rhs = regs[isWord][mod.rm.to_ulong()];
         }
+        instr = overrides.first + instr + " " + ins.lhs + ", " + ins.rhs; 
+        return; 
     }
 
-    if(toRegister) {
+    
+    bool memSideLeft = false;
+
+    // lea ax, [bx] <- Mem operation, only to register
+    if(toRegister || isMemOperation) {
         ins.lhs = regs[isWord][mod.reg.to_ulong()];
         ins.rhs = mrm[mod.mode.to_ulong()][mod.rm.to_ulong()];
     }
     else {
         ins.lhs = mrm[mod.mode.to_ulong()][mod.rm.to_ulong()];
         ins.rhs = regs[isWord][mod.reg.to_ulong()];
+        memSideLeft = true;
     }
+
+
+    if(!memSideLeft) 
+        instr = overrides.first + instr + " " + ins.lhs + ", " + overrides.second + ins.rhs + getModRMDisplacement(); 
+    else 
+        instr = overrides.first + instr + " " + overrides.second + ins.lhs + getModRMDisplacement() + ", " + ins.rhs;  
+    
+
+}
+
+void Disasm::disasmModRMSeg(bool toSegmentRegister, std::string& instr) {
+
+    InstrString ins;
+    auto overrides = getOverrides();
+
+    if(mod.mode == REGISTER_MODE) {
+        if(!toSegmentRegister) {
+            ins.lhs = regs[true][mod.rm.to_ulong()];
+            ins.rhs = regSeg[mod.reg.to_ulong()];
+        }
+        else {
+            ins.lhs = regSeg[mod.reg.to_ulong()];
+            ins.rhs = regs[true][mod.rm.to_ulong()];
+        }
+        instr = overrides.first + instr + " " + ins.lhs + ", " + ins.rhs; 
+        return; 
+    }
+  
+    bool memSideLeft = false;
+
+    if(toSegmentRegister) {
+        ins.lhs = regSeg[mod.reg.to_ulong()];
+        ins.rhs = mrm[mod.mode.to_ulong()][mod.rm.to_ulong()]; 
+    }
+    else {
+        ins.lhs = mrm[mod.mode.to_ulong()][mod.rm.to_ulong()];
+        ins.rhs = regSeg[mod.reg.to_ulong()]; 
+        memSideLeft = true; 
+    }
+   
+    if(!memSideLeft) 
+        instr = overrides.first + instr + " " + ins.lhs + ", " + overrides.second + ins.rhs + getModRMDisplacement(); 
+    else 
+        instr = overrides.first + instr + " " + overrides.second + ins.lhs + getModRMDisplacement() + ", " + ins.rhs;  
+}
+
+void Disasm::disasmRegImm(bool isWord, Operand lhs, std::string& instr) {
+    
+    char buf[32] = {0};
+    if(!isWord) sprintf(buf, "%#x", memory[position+1]);
+    else sprintf(buf, "%#x", memory[position+2]<<8|memory[position+1]);
+
+    instr += " " + regsHelper[lhs] + ", " + std::string(buf);
+
+}
+
+std::string Disasm::getModRMDisplacement() {
 
     char buf[32] = {0};
 
     if(mod.mode == NO_DISPLACEMENT && mod.rm == UWORD) {
-        uint16_t v = mem[insByte()+3] << 8 | mem[insByte()+2];
-        sprintf(buf, "0x%x", v);
-        ins.disp = buf;
-        return;
+        int16_t value = 0; 
+        value = memory[position+3] << 8 | memory[position+2];     
+        sprintf(buf, "%#x]", (uint16_t)value); 
+        return buf;
     }
 
-    if(mod.mode == BYTE_DISPLACEMENT || mod.mode == WORD_DISPLACEMENT) {
-
-        int16_t v = 0;
-        if(mod.mode == BYTE_DISPLACEMENT) v = mem[insByte()+2];
-        if(mod.mode == WORD_DISPLACEMENT) v = mem[insByte()+3] << 8 | mem[insByte()+2];
-        
-        //if((int16_t) v < 0)
-        //    ins.dispSign = '-';
-        //else 
-        //    ins.dispSign = '+';
-
-        //sprintf(buf, "0x%x", (int16_t)v<0?-(uint16_t)v:v);
-
-        sprintf(buf, "%c0x%x", (v<0)?'-':'+', v<0?-(unsigned)v:v);
-
-        ins.disp = buf;
+    if(mod.mode == BYTE_DISPLACEMENT) {
+        int8_t value = memory[position+2];
+        sprintf(buf, "%c%#x]", (value<0)?'-':'+', value<0?-value:value);
     }
+
+    if(mod.mode == WORD_DISPLACEMENT) {
+        int16_t value = memory[position+3] << 8 | memory[position+2];
+        sprintf(buf, "%c%#x]", (value<0)?'-':'+', value<0?-value:value);
+    }
+
+    return buf;
 }
 
-void Disasm::modRmOp(bool toRegister, bool isWord, std::string iname, InstrString &istr) {
-        mod.decode(mem[insByte()+1]);
-        disasmFromModRM(toRegister, isWord, istr);
-        istr.instr = iname;  
-        pos += mod.getModInstrSize(skip);
+std::pair<std::string, std::string> Disasm::getOverrides() {
+    std::string overridesBegin, overridesEnd;
+    if(ovr.repOverride != 0) overridesBegin = opcodes[ovr.repOverride].instr; 
+    if(ovr.regOverride != 0) overridesEnd = opcodes[ovr.regOverride].instr;
+    return std::pair<std::string, std::string>(overridesBegin, overridesEnd);
 }
 
-void Disasm::alaxImm(std::string iname, int size, InstrString& istr) {
-
-    assert(size == 2 || size == 3);
-
-    char buf[32] = {0};
-    if(size == 2) sprintf(buf, "0x%x", mem[insByte()+1]), istr.lhs = "AL";
-    if(size == 3) sprintf(buf, "0x%x", mem[insByte()+2] << 8 | mem[insByte()+1]), istr.lhs = "AX";
-
-    istr.instr = iname;
-    istr.rhs = buf;
-    istr.argType = IMMEDIATE_ARG;
-
-    pos += ovrd.getOverrideCount() + size;
-
-}

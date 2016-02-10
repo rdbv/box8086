@@ -1,19 +1,16 @@
 #ifndef DISASM_HPP
 #define DISASM_HPP
 
-
 #include <string>
 #include <vector>
-#include <bitset>
-#include <cstdint>
 #include <unordered_map>
 
-#include "../CPU/CPU.hpp"
+#include "Opcodes.hpp"
+#include "../CPU/ModRM.hpp"
+#include "../CPU/Overrides.hpp"
 
-typedef std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> ModRMStrings;
-typedef std::unordered_map<bool, std::unordered_map<ubyte, std::string>> RegisterMapStrings;
+static std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> mrm {
 
-static ModRMStrings mrm {
     { 
         NO_DISPLACEMENT,
         {
@@ -54,11 +51,13 @@ static ModRMStrings mrm {
 
         }
     }
+
 };
 
-static RegisterMapStrings regs {
+static std::unordered_map<ubyte, std::unordered_map<uword, std::string>> regs {
+
     {
-       false,
+       0,
        {
            {AL_AX, "AL"},
            {CL_CX, "CL"},
@@ -71,7 +70,7 @@ static RegisterMapStrings regs {
        }
     },
     {
-        true,
+        1,
         {
            {AL_AX, "AX"},
            {CL_CX, "CX"},
@@ -82,15 +81,50 @@ static RegisterMapStrings regs {
            {DH_SI, "SI"},
            {BH_DI, "DI"}, 
         }
+    },
+    {
+        2,
+        {
+            {ES, "ES"},
+            {CS, "CS"},
+            {DS, "DS"},
+            {SS, "SS"},
+        }
     }
+
 };
 
-// a, b
-#define NORMAL_ARG 2
-// a, imm
-#define IMMEDIATE_ARG 3
-// a
-#define ARG_ONLY_LHS 4
+static std::unordered_map<ubyte, std::string> regSeg {
+       
+       {ES, "ES"},
+       {CS, "CS"},
+       {DS, "DS"},
+       {SS, "SS"},
+
+};
+
+static std::unordered_map<ubyte, std::string> regsHelper {
+    {REG_AL, "AL"},
+    {REG_CL, "CL"},
+    {REG_DL, "DL"},
+    {REG_BL, "BL"},
+    {REG_AH, "AH"},
+    {REG_CH, "CH"},
+    {REG_DH, "DH"},
+    {REG_BH, "BH"},
+    {REG_AX, "AX"},
+    {REG_CX, "CX"},
+    {REG_DX, "DX"},
+    {REG_BX, "BX"},
+    {REG_SP, "SP"},
+    {REG_BP, "BP"},
+    {REG_SI, "SI"},
+    {REG_DI, "DI"},
+    {REG_CS, "CS"},
+    {REG_DS, "DS"},
+    {REG_SS, "SS"},
+    {REG_ES, "ES"},
+};
 
 struct InstrString {
 
@@ -99,41 +133,42 @@ struct InstrString {
     std::string disp;
 
     char dispSign = 0;
+    char dispSide = 0; 
     char argType = 0;
 
 };
 
 typedef std::vector<InstrString> Instructions;
+
 class Disasm {
 
 public:
-    Disasm(){}
-
-    void bindMem(uint8_t*);
-
-    Instructions disasmCount(unsigned int, unsigned int);
+    Disasm() {}
+    void bindMemory(ubyte*);
+    std::vector<std::string> disasmN(unsigned int, unsigned int);
 
 private:
-    int pos = 0;
-    int skip = 0;
-    uint8_t* mem;
-   
+    unsigned int position = 0;
+    ubyte* memory;
     ModRM mod;
-    Overrides ovrd;
+    Overrides ovr;
+
+
+    std::string disasm();
+
+    void disasmImm(bool, std::string&);
+    void disasmJmp(bool, std::string&); 
     
-    InstrString disasm();
+    void disasmModRM(bool, bool, bool, std::string&);
+    void disasmModRMSeg(bool, std::string&);
+    
+    void disasmRegImm(bool, Operand, std::string&);
 
-    void setOverrides();
+    std::string getModRMDisplacement();
+    std::pair<std::string, std::string> getOverrides();
 
-    void disasmFromModRM(bool, bool, InstrString&);
-
-    void modRmOp(bool , bool , std::string, InstrString&);
-    void alaxImm(std::string, int, InstrString&);
-
-    inline int insByte() { 
-        return skip + pos;
-    }
 
 };
+
 
 #endif

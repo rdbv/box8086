@@ -40,7 +40,6 @@ void CPU::execute() {
     switch(memory[IPReal])
     {
         case 0x00:	//00 ADD Eb Gb 
-            //printf("Add Eb, Gb\n"); 
             mod.decode(memory[IPReal+1]);
             setOperands<false, false>();
             tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);
@@ -49,7 +48,6 @@ void CPU::execute() {
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x01:	//01 ADD Ev Gv 
-            //printf("Add Ev, Gv\n"); 
             mod.decode(memory[IPReal+1]);
             setOperands<false, true>();
             tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
@@ -58,7 +56,6 @@ void CPU::execute() {
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x02:	//02 ADD Gb Eb 
-            //printf("Add Gb, Eb\n");
             mod.decode(memory[IPReal+1]);
             setOperands<true, false>();
             tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);

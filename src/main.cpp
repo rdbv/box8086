@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <iomanip>
 
 #include <string.h>
 #include <stdio.h>
@@ -25,8 +25,9 @@ uint8_t* loadFile(const std::string& fileName, unsigned int* fileSize) {
 
 int main() {
    
-/*    unsigned int fileSize;
+    unsigned int fileSize;
     ubyte* bytes = loadFile("bin/test.bin", &fileSize);
+/*
 //    CPU cpu;
 //    Memory* mem = cpu.getMemory(); 
 //    memcpy( &(*mem)[0], bytes, fileSize);
@@ -36,11 +37,9 @@ int main() {
 */
 
     Disasm dis;
-    dis.bindMem(bytes);
-
-    dis.disasmCount(0x0000, 10);
-
+    dis.bindMemory(bytes);
+    dis.disasmN(0x0000, 10);
+    
     free(bytes);
-
 
 }
