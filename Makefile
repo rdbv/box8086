@@ -8,7 +8,7 @@ LINK= bin/Memory.o bin/CPU.o
 BIN_DIR=bin
 SRC_DIR=src
 CPU_DIR=$(SRC_DIR)/CPU
-CGUI_DIR=$(SRC_DIR)/ConsoleGUI
+GUI_DIR=$(SRC_DIR)/GUI
 DIS_DIR=$(SRC_DIR)/Disasm
 MAIN_LINK=bin/Memory.o bin/CPU.o bin/Disasm.o
 
@@ -22,10 +22,7 @@ main:
 
 GUI:
 	# Compiling GUI
-	@$(CC) $(CFLAGS) $(CGUI_DIR)/GUI.cpp -o bin/main $(MAIN_LINK) -lncurses
-
-GTK_GUI:
-	@$(CC) $(CFLAGS) $(CGUI_DIR)/GTK_GUI.cpp -o bin/main $(MAIN_LINK) `pkg-config --libs --cflags gtk+-2.0`
+	@$(CC) $(CFLAGS) $(GUI_DIR)/GUI.cpp -o bin/main $(MAIN_LINK) `pkg-config --libs --cflags gtk+-2.0`
 
 CPU:
 	# Compiling CPU
@@ -48,7 +45,7 @@ clean:
 CPU_vim: CPU GUI
 Memory_vim: Memory GUI
 Disasm_vim: Disasm main
-GTK_GUI_vim: GTK_GUI 
+GUI_vim: GUI 
 testbin_vim: testbin
 Opcodes_vim: Disasm main
 main_vim: main
