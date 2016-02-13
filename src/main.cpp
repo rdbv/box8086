@@ -32,6 +32,6 @@ int main() {
     dis.bindMemory(bytes);
     dis.disasmN(0x0000, 10);
     
-    free(bytes);
+    //free(bytes);
 
 }
