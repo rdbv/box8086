@@ -49,13 +49,13 @@ GUI_vim: GUI
 testbin_vim: testbin
 Opcodes_vim: Disasm main
 main_vim: main
-
+bochs_vim: bochs
 #######################################################################
 
 # Binary tests stuff
 testbin:
 	# Assembling testbin
-	$(AS) $(AFLAGS) $(CPU_DIR)/testbin.asm -o $(BIN_DIR)/test.bin
+	@$(AS) $(AFLAGS) $(CPU_DIR)/testbin.asm -o $(BIN_DIR)/test.bin
 
 bochs:
 	nasm -f bin ../bochs.asm -o $(BIN_DIR)/test.bin

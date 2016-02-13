@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <iostream>
 
-int main() {
+#include "../Disasm/Disasm.hpp"
 
-    return 0;
+int main(int argc, char* argv[]) {
+    Disasm dis;
+    
 }

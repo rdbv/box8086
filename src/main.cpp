@@ -27,14 +27,6 @@ int main() {
    
     unsigned int fileSize;
     ubyte* bytes = loadFile("bin/test.bin", &fileSize);
-/*
-//    CPU cpu;
-//    Memory* mem = cpu.getMemory(); 
-//    memcpy( &(*mem)[0], bytes, fileSize);
-
-//    cpu.runTest();
-
-*/
 
     Disasm dis;
     dis.bindMemory(bytes);
