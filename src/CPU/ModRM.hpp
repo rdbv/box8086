@@ -45,6 +45,33 @@ struct ModRM {
 
     }
 
+    int getDisplacementSize(int skip) {
+        
+        switch(mode.to_ulong()) {
+            
+            case REGISTER_MODE:
+                return skip;
+
+            case NO_DISPLACEMENT:
+                if(rm == UWORD)
+                    return 2 + skip;
+                else
+                    return skip;
+
+            case BYTE_DISPLACEMENT:
+                return 1 + skip;
+
+            case WORD_DISPLACEMENT:
+                return 2 + skip;
+            
+            default:
+                assert(false);
+
+        }
+
+    }
+
+
 }; 
 
 

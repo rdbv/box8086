@@ -95,12 +95,10 @@ static std::unordered_map<ubyte, std::unordered_map<uword, std::string>> regs {
 };
 
 static std::unordered_map<ubyte, std::string> regSeg {
-       
        {ES, "ES"},
        {CS, "CS"},
        {DS, "DS"},
        {SS, "SS"},
-
 };
 
 static std::unordered_map<ubyte, std::string> regsHelper {
@@ -126,26 +124,12 @@ static std::unordered_map<ubyte, std::string> regsHelper {
     {REG_ES, "ES"},
 };
 
-struct InstrString {
-
-    std::string instr;
-    std::string lhs, rhs;
-    std::string disp;
-
-    char dispSign = 0;
-    char dispSide = 0; 
-    char argType = 0;
-
-};
-
-typedef std::vector<InstrString> Instructions;
-
 class Disasm {
 
 public:
     Disasm() {}
     void bindMemory(ubyte*);
-    std::vector<std::string> disasmN(unsigned int, unsigned int);
+    std::vector<std::string> disasm(unsigned int, unsigned int);
 
 private:
     unsigned int position = 0;
@@ -156,17 +140,17 @@ private:
 
     std::string disasm();
 
+    void disasmGrp(Opcode&, ubyte&, std::string&);
     void disasmImm(bool, std::string&);
     void disasmJmp(bool, std::string&); 
-    
     void disasmModRM(bool, bool, bool, std::string&);
     void disasmModRMSeg(bool, std::string&);
-    
+    void disasmModRMImm(bool, bool, std::string&); 
+    void disasmModRMOne(bool, int, std::string&); 
     void disasmRegImm(bool, Operand, std::string&);
-
+    
     std::string getModRMDisplacement();
     std::pair<std::string, std::string> getOverrides();
-
 
 };
 

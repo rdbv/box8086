@@ -327,13 +327,87 @@ static Opcode opcodes[256] = {
 };
 
 static std::unordered_map<ubyte, std::unordered_map<ubyte, Opcode>> grp {
+    
     {
         GRP1,
-            {
-                {0b000, Opcode{"ADD", NONE, NONE, MODRM_IMM_ENC}},
-                {0b001, Opcode{"OR", NONE, NONE, MODRM_IMM_ENC}},
-            }
+        {
+            {0b000, Opcode{"ADD", NONE, NONE, MODRM_IMM_ENC}},
+            {0b001, Opcode{"OR", NONE, NONE, MODRM_IMM_ENC}},
+            {0b010, Opcode{"ADC", NONE, NONE, MODRM_IMM_ENC} },
+            {0b011, Opcode{"SBB", NONE, NONE, MODRM_IMM_ENC} },
+            {0b100, Opcode{"AND", NONE, NONE, MODRM_IMM_ENC} },
+            {0b101, Opcode{"SUB", NONE, NONE, MODRM_IMM_ENC} },
+            {0b110, Opcode{"XOR", NONE, NONE, MODRM_IMM_ENC} },
+            {0b111, Opcode{"CMP", NONE, NONE, MODRM_IMM_ENC} },
+        }
     },
+    {
+        GRP2, 
+        {
+            {0b000, Opcode{"ROL", NONE, NONE, MODRM_ARG_ONE} },
+            {0b001, Opcode{"ROR", NONE, NONE, MODRM_ARG_ONE} },
+            {0b010, Opcode{"RCL", NONE, NONE, MODRM_ARG_ONE} },
+            {0b011, Opcode{"RCR", NONE, NONE, MODRM_ARG_ONE} },
+            {0b100, Opcode{"SHL", NONE, NONE, MODRM_ARG_ONE} },
+            {0b101, Opcode{"SHR", NONE, NONE, MODRM_ARG_ONE} },
+            {0b110, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+            {0b111, Opcode{"SAR", NONE, NONE, MODRM_ARG_ONE} },
+        } 
+    },
+    {
+        GRP3a,
+         {
+            {0b000, Opcode{"TEST",NONE, IMM_IB, MODRM_IMM_ENC} },
+            {0b001, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+            {0b010, Opcode{"NOT", NONE, NONE, MODRM_ONE_ARG} },
+            {0b011, Opcode{"NEG", NONE, NONE, MODRM_ONE_ARG} },
+            {0b100, Opcode{"MUL", NONE, NONE, MODRM_ONE_ARG} },
+            {0b101, Opcode{"IMUL",NONE, NONE, MODRM_ONE_ARG} },
+            {0b110, Opcode{"DIV", NONE, NONE, MODRM_ONE_ARG} },
+            {0b111, Opcode{"IDIV",NONE, NONE, MODRM_ONE_ARG} },
+         } 
+    },
+    
+    {
+        GRP3b, 
+        {
+            {0b000, Opcode{"TEST",NONE, IMM_IV, MODRM_IMM_ENC} },
+            {0b001, Opcode{"",    NONE, NONE, INVALID_ENC} },
+            {0b010, Opcode{"NOT", NONE, NONE, MODRM_ONE_ARG} },
+            {0b011, Opcode{"NEG", NONE, NONE, MODRM_ONE_ARG} },
+            {0b100, Opcode{"MUL", NONE, NONE, MODRM_ONE_ARG} },
+            {0b101, Opcode{"IMUL",NONE, NONE, MODRM_ONE_ARG} },
+            {0b110, Opcode{"DIV", NONE, NONE, MODRM_ONE_ARG} },
+            {0b111, Opcode{"IDIV",NONE, NONE, MODRM_ONE_ARG} },
+        } 
+    },
+    {
+        GRP4, 
+        {
+            {0b000, Opcode{"INC", NONE, NONE, MODRM_ONE_ARG} },       
+            {0b001, Opcode{"DEC", NONE, NONE, MODRM_ONE_ARG} },       
+            {0b010, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+            {0b011, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+            {0b100, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+            {0b101, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+            {0b110, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+            {0b111, Opcode{"BAD", NONE, NONE, INVALID_ENC} },
+        } 
+    },
+    {
+        GRP5, 
+        {
+            {0b000, Opcode{"INC", NONE, NONE, MODRM_ONE_ARG} },         
+            {0b001, Opcode{"DEC", NONE, NONE, MODRM_ONE_ARG} },         
+            {0b010, Opcode{"CALL",NONE, NONE, MODRM_ONE_ARG} },       
+            {0b011, Opcode{"CALL",IMM_IB, NONE, INVALID_ENC} },       
+            {0b100, Opcode{"JMP", NONE, NONE, MODRM_ONE_ARG} },
+            {0b101, Opcode{"JMP", IMM_IB, NONE, INVALID_ENC} },        
+            {0b110, Opcode{"PUSH",NONE, NONE, MODRM_ONE_ARG} },
+            {0b111, Opcode{"", NONE, NONE, INVALID_ENC} },
+        } 
+    }
+
 };
 
 #endif

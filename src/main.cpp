@@ -30,8 +30,7 @@ int main() {
 
     Disasm dis;
     dis.bindMemory(bytes);
-    dis.disasmN(0x0000, 10);
-    
+    dis.disasm(0x0000, 20);
     //free(bytes);
 
 }
