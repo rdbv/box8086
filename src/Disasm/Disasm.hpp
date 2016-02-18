@@ -9,6 +9,10 @@
 #include "../CPU/ModRM.hpp"
 #include "../CPU/Overrides.hpp"
 
+#define BUF_LEN 32
+#define GET_BYTE(x) (memory[position+x])
+#define GET_WORD(x,y) ((memory[position+x]<<8)|memory[position+y])
+
 static std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> mrm {
 
     { 
@@ -118,10 +122,10 @@ static std::unordered_map<ubyte, std::string> regsHelper {
     {REG_BP, "BP"},
     {REG_SI, "SI"},
     {REG_DI, "DI"},
-    {REG_CS, "CS"},
-    {REG_DS, "DS"},
-    {REG_SS, "SS"},
-    {REG_ES, "ES"},
+    {REG_SEG_CS, "CS"},
+    {REG_SEG_DS, "DS"},
+    {REG_SEG_SS, "SS"},
+    {REG_SEG_ES, "ES"},
 };
 
 class Disasm {
@@ -140,15 +144,18 @@ private:
 
     std::string disasm();
 
-    void disasmGrp(Opcode&, ubyte&, std::string&);
     void disasmImm(bool, std::string&);
     void disasmJmp(bool, std::string&); 
+    void disasmGrp(Opcode&, ubyte&, std::string&);
+
     void disasmModRM(bool, bool, bool, std::string&);
     void disasmModRMSeg(bool, std::string&);
     void disasmModRMImm(bool, bool, std::string&); 
-    void disasmModRMOne(bool, int, std::string&); 
-    void disasmRegImm(bool, Operand, std::string&);
     
+    void disasmModRMOne(bool, Operand, std::string&); 
+    void disasmRegImm(bool, Operand, std::string&);
+   
+
     std::string getModRMDisplacement();
     std::pair<std::string, std::string> getOverrides();
 

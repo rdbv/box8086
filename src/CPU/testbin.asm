@@ -1,28 +1,10 @@
 cpu 8086
+org 0x7c00
 
-jmp main
+repz shl word [es:bx+si], 1
+repnz shr byte [0xfad], cl
 
-print_string:
-    _loop:
-        mov al, [si]
-        cmp al, 0x00
-        je _done
-        mov ah, 0xe
-        int 0x10
-        jmp _loop
-    _done:
-        ret
+and word [ss:bx], 0xf3
 
-
-
-main:
-    mov si, hello
-    call print_string
-    cli
-    hlt
-
-
-hello: db "Hello!", 0x00
-nop
-
-
+times 510 - ($-$$) db 0
+dw 0xAA55
