@@ -12,5 +12,5 @@ What now works:
 
 
 
-![Alt Text](/src/GUI/gui/png?raw=true "GUI Layout")
+![GUI Screen](/src/GUI/gui.png?raw=true "GUI Layout")
 
