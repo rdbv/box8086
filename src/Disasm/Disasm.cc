@@ -1,83 +1,50 @@
 #include "Disasm.hpp" 
 
 void Disasm::bindMemory(ubyte* mem) {
+    
     assert(mem != nullptr);
     memory = mem;
+
 }
 
-std::vector<std::string> Disasm::disasm(unsigned int AbsAddr, unsigned int Count) {
-    assert(AbsAddr < DEFAULT_MEMORY_SIZE);
+std::vector<InstrData> Disasm::disasm(unsigned int absAddr, unsigned int count) {
+    
+    assert(absAddr < DEFAULT_MEMORY_SIZE);
 
-    std::vector<std::string> instr;
-    position = AbsAddr;
+    std::vector<InstrData> instr;
+    position = absAddr;
 
     unsigned int pos = 0;
-    for(unsigned int i=0;i<Count;++i) {
+    unsigned int instrSize = 0;
+    for(unsigned int i=0;i<count;++i) {
         pos = position; 
-        instr.push_back(disasm());
-        printf("%4x:%s\n", pos, instr[i].c_str());
+        std::string in = disasm(instrSize);
+        instr.push_back(InstrData{pos, instrSize, in});
     }
 
     return instr;
 }
 
-std::string Disasm::disasm() {
+std::string Disasm::disasm(unsigned int& instrSize) {
+    
     std::string inst;
-
+    /* Reset overrides */
     ovr.clear();
+    /* Fetch overrides */
     ovr.setOverrides(position, memory);
+    /* Skip overrides */ 
     position += ovr.getOverrideCount();
-
+    /* Fetch byte from memory */
     ubyte opByte = memory[position];
+    /* Get opcode data from lookup */ 
     Opcode opData = opcodes[opByte];
-
-/*
-   
-    if(opData.enc != GRP_ENC)
-        inst += opData.instr;
-
-    if(opData.enc == ONE_BYTE_ENC || opData.enc == REG_REG_ENC) position++;
-
-    if(opData.enc == MODRM_ENC || opData.enc == MODRM_MEM_ENC) {
-        mod.decode(memory[position+1]);
-        disasmModRM(TO_REGISTER(opByte), IS_WORD(opByte), opData.enc == MODRM_MEM_ENC , inst);
-        position += mod.getModInstrSize(0);
-    }
-    if(opData.enc == MODRM_SEG_ENC) {
-        mod.decode(memory[position+1]);
-        disasmModRMSeg(TO_REGISTER(opByte), inst);
-        position += mod.getModInstrSize(0);
-    }
-    if(opData.enc == IMM_ENC) {
-        disasmImm(opData.lhs == IMM_IV, inst);
-        position += (opData.lhs == IMM_IV)?3:2;
-    }
-    if(opData.enc == REG_IMM_ENC) {
-        disasmRegImm(opData.rhs == IMM_IV, opData.lhs, inst);
-        position += (opData.rhs == IMM_IV)?3:2;
-    }
-    if(opData.enc == JMP_ENC) {
-        disasmJmp(opData.lhs == IMM_IV, inst);
-        position += (opData.lhs == IMM_IV)?3:2;
-    }
-    if(opData.enc == MODRM_IMM_ENC) {
-        mod.decode(memory[position+1]);
-        disasmModRMImm(IS_WORD(opByte), false, inst);
-        position += mod.getModInstrSize(IS_WORD(opByte)?2:1);        
-    }
-    if(opData.enc == GRP_ENC) {
-        mod.decode(memory[position+1]);
-        disasmGrp(opData, opByte, inst);
-    }
-    if(opData.enc == INVALID_ENC) {
-        ++position; 
-    }
-
-*/
 
     if(opData.enc != GRP_ENC)
        inst += opData.instr;
 
+    instrSize = position;
+
+    /* Decode */
     switch(opData.enc) {
   
         /* 0 Arguments, only opcode */
@@ -137,9 +104,18 @@ std::string Disasm::disasm() {
         
     }
 
+    /* Compute instruction size */
+    instrSize -= position;
+    instrSize = -instrSize;
+    instrSize += ovr.getOverrideCount();
+
     return inst;
 
 }
+
+/* Disasm immediate instruction
+ * ex. int 0x30
+ */
 
 void Disasm::disasmImm(bool isWord, std::string& instr) {
 
@@ -152,6 +128,13 @@ void Disasm::disasmImm(bool isWord, std::string& instr) {
 
     instr += " " + std::string(buf);
 }
+
+/* Disasm jmp instruction
+ * ex. jmp <label>
+ * is needed to calculate absolute address by
+ * absolute_value = (signed) value + byteNo + jmp_instr_size
+ * abs_val = overflowed value 
+ */
 
 void Disasm::disasmJmp(bool isWord, std::string& instr) {
 
@@ -168,6 +151,7 @@ void Disasm::disasmJmp(bool isWord, std::string& instr) {
     
     instr += " " + std::string(buf);
 }
+
 
 void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
 
@@ -186,8 +170,6 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
     }
     
 }
-
-
 
 void Disasm::disasmModRM(bool toRegister, bool isWord, bool isMemOperation, std::string& instr) {
 

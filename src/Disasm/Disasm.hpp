@@ -18,40 +18,40 @@ static std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> mrm {
     { 
         NO_DISPLACEMENT,
         {
-            {BX_SI, "[BX+SI]"},
-            {BX_DI, "[BX+DI]"},
-            {BP_SI, "[BP+SI]"},
-            {BP_DI, "[BP+DI]"},
-            {SI, "[SI]"},
-            {DI, "[DI]"},
+            {BX_SI, "[bx+si]"},
+            {BX_DI, "[bx+di]"},
+            {BP_SI, "[bp+si]"},
+            {BP_DI, "[bp+di]"},
+            {SI, "[si]"},
+            {DI, "[di]"},
             {UWORD, "["},
-            {BX, "[BX]"},
+            {BX, "[bx]"},
         }
     },
     { 
         BYTE_DISPLACEMENT,
         {
-            {BX_SI, "[BX+SI"},
-            {BX_DI, "[BX+DI"},
-            {BP_SI, "[BP+SI"},
-            {BP_DI, "[BP+DI"},
-            {SI, "[SI"},
-            {DI, "[DI"},
-            {BP, "[BP"},
-            {BX, "[BX"},
+            {BX_SI, "[bx+si"},
+            {BX_DI, "[bx+di"},
+            {BP_SI, "[bp+si"},
+            {BP_DI, "[bp+di"},
+            {SI, "[si"},
+            {DI, "[di"},
+            {BP, "[bp"},
+            {BX, "[bx"},
         }
     },
     { 
         WORD_DISPLACEMENT,
         {
-            {BX_SI, "[BX+SI"},
-            {BX_DI, "[BX+DI"},
-            {BP_SI, "[BP+SI"},
-            {BP_DI, "[BP+DI"},
-            {SI, "[SI"},
-            {DI, "[DI"},
-            {BP, "[BP"},
-            {BX, "[BX"},
+            {BX_SI, "[bx+si"},
+            {BX_DI, "[bx+di"},
+            {BP_SI, "[bp+si"},
+            {BP_DI, "[bp+di"},
+            {SI, "[si"},
+            {DI, "[di"},
+            {BP, "[bp"},
+            {BX, "[bx"},
 
         }
     }
@@ -63,69 +63,75 @@ static std::unordered_map<ubyte, std::unordered_map<uword, std::string>> regs {
     {
        0,
        {
-           {AL_AX, "AL"},
-           {CL_CX, "CL"},
-           {DL_DX, "DL"},
-           {BL_BX, "BL"},
-           {AH_SP, "AH"},
-           {CH_BP, "CH"},
-           {DH_SI, "DH"},
-           {BH_DI, "BH"},
+           {AL_AX, "al"},
+           {CL_CX, "cl"},
+           {DL_DX, "dl"},
+           {BL_BX, "bl"},
+           {AH_SP, "ah"},
+           {CH_BP, "ch"},
+           {DH_SI, "dh"},
+           {BH_DI, "bh"},
        }
     },
     {
         1,
         {
-           {AL_AX, "AX"},
-           {CL_CX, "CX"},
-           {DL_DX, "DX"},
-           {BL_BX, "BX"},
-           {AH_SP, "SP"},
-           {CH_BP, "BP"},
-           {DH_SI, "SI"},
-           {BH_DI, "DI"}, 
+           {AL_AX, "ax"},
+           {CL_CX, "cx"},
+           {DL_DX, "dx"},
+           {BL_BX, "bx"},
+           {AH_SP, "sp"},
+           {CH_BP, "bp"},
+           {DH_SI, "si"},
+           {BH_DI, "di"}, 
         }
     },
     {
         2,
         {
-            {ES, "ES"},
-            {CS, "CS"},
-            {DS, "DS"},
-            {SS, "SS"},
+            {ES, "es"},
+            {CS, "cs"},
+            {DS, "ds"},
+            {SS, "ss"},
         }
     }
 
 };
 
 static std::unordered_map<ubyte, std::string> regSeg {
-       {ES, "ES"},
-       {CS, "CS"},
-       {DS, "DS"},
-       {SS, "SS"},
+       {ES, "es"},
+       {CS, "cs"},
+       {DS, "ds"},
+       {SS, "ss"},
 };
 
 static std::unordered_map<ubyte, std::string> regsHelper {
-    {REG_AL, "AL"},
-    {REG_CL, "CL"},
-    {REG_DL, "DL"},
-    {REG_BL, "BL"},
-    {REG_AH, "AH"},
-    {REG_CH, "CH"},
-    {REG_DH, "DH"},
-    {REG_BH, "BH"},
-    {REG_AX, "AX"},
-    {REG_CX, "CX"},
-    {REG_DX, "DX"},
-    {REG_BX, "BX"},
-    {REG_SP, "SP"},
-    {REG_BP, "BP"},
-    {REG_SI, "SI"},
-    {REG_DI, "DI"},
-    {REG_SEG_CS, "CS"},
-    {REG_SEG_DS, "DS"},
-    {REG_SEG_SS, "SS"},
-    {REG_SEG_ES, "ES"},
+    {REG_AL, "al"},
+    {REG_CL, "cl"},
+    {REG_DL, "dl"},
+    {REG_BL, "bl"},
+    {REG_AH, "ah"},
+    {REG_CH, "ch"},
+    {REG_DH, "dh"},
+    {REG_BH, "bh"},
+    {REG_AX, "ax"},
+    {REG_CX, "cx"},
+    {REG_DX, "dx"},
+    {REG_BX, "bx"},
+    {REG_SP, "sp"},
+    {REG_BP, "bp"},
+    {REG_SI, "si"},
+    {REG_DI, "di"},
+    {REG_SEG_CS, "cs"},
+    {REG_SEG_DS, "ds"},
+    {REG_SEG_SS, "ss"},
+    {REG_SEG_ES, "es"},
+};
+
+struct InstrData {
+    unsigned int position;
+    unsigned int size;
+    std::string instr;
 };
 
 class Disasm {
@@ -133,7 +139,7 @@ class Disasm {
 public:
     Disasm() {}
     void bindMemory(ubyte*);
-    std::vector<std::string> disasm(unsigned int, unsigned int);
+    std::vector<InstrData> disasm(unsigned int, unsigned int);
 
 private:
     unsigned int position = 0;
@@ -142,7 +148,7 @@ private:
     Overrides ovr;
 
 
-    std::string disasm();
+    std::string disasm(unsigned int&);
 
     void disasmImm(bool, std::string&);
     void disasmJmp(bool, std::string&); 

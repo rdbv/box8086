@@ -22,7 +22,7 @@ main:
 
 GUI:
 	# Compiling GUI
-	@$(CC) $(CFLAGS) $(GUI_DIR)/GUI.cpp -o bin/main $(MAIN_LINK) `pkg-config --libs --cflags gtk+-2.0`
+	@$(CC) $(CFLAGS) $(GUI_DIR)/GUI.cpp -o bin/main $(MAIN_LINK) `pkg-config --libs --cflags gtkmm-3.0`
 
 CPU:
 	# Compiling CPU
