@@ -6,6 +6,15 @@
 
 #include <gtkmm.h>
 
+/* Ugly code, but i need GUI for do some tests :P */
+
+std::vector<std::string> __regs = {
+    "AX", "BX", "CX", "DX",
+    "SI", "DI", "SP", "BP",
+    "CS", "DS", "SS", "ES",
+    "IP", "FLAGS",
+};
+
 void loadFile(const std::string& fileName, ubyte* mem) {
    
     unsigned int fileSize = 0;
@@ -20,7 +29,7 @@ void loadFile(const std::string& fileName, ubyte* mem) {
     
     fread(mem, fileSize, 1, f);
 }
-
+ 
 class InstructionColumn : public Gtk::TreeModel::ColumnRecord {
     public:
         InstructionColumn() {
@@ -55,8 +64,6 @@ public:
         set_border_width(10);
 
         init_view();
-
-        //test();
     }
 
     void append_row(unsigned int position, std::string str) {
@@ -143,110 +150,136 @@ public:
 };
 
 
-class RegistersFrame : public Gtk::Frame {
+class RegisterColumn : public Gtk::TreeModel::ColumnRecord {
+    public:
+        RegisterColumn() {
+            add(register_name);
+            add(str_value);
+        }
 
+    Gtk::TreeModelColumn<std::string> register_name;
+    Gtk::TreeModelColumn<std::string> str_value;
+
+};
+
+class RegistersViewFrame : public Gtk::ScrolledWindow {
+    
 public:
-    RegistersFrame() 
-        : Gtk::Frame("Registers") {
-        
-
-
-        init_labels();
-        init_grid();
-
-        add(grid);
+    RegistersViewFrame() {
+        add(sw);
+        sw.add(tv);
+        init_view();
 
     }
+    
+    void init_view() {
+        ref_tree_model = Gtk::ListStore::create(columns);
+        tv.set_model(ref_tree_model);
 
-    void init_labels() {
-        ax.set_label("AX:0x0000");
-        bx.set_label("BX:0x0000");
-        cx.set_label("CX:0x0000");
-        dx.set_label("DX:0x0000");
+        tv.append_column("Register", columns.register_name);
+        tv.append_column("Value (Hexadecimal)", columns.str_value);
 
-        sp.set_label("SP:0x0000");
-        bp.set_label("BP:0x0000");
-        si.set_label("SI:0x0000");
-        di.set_label("DI:0x0000");
-
-        cs.set_label("CS:0x0000");
-        ds.set_label("DS:0x0000");
-        es.set_label("ES:0x0000");
-        ss.set_label("SS:0x0000");
-
-        ip.set_label("IP:0x0000");
-        flags.set_label("FLAGS: OV CF ");
-
-    }
-
-    void init_grid() {
-
-        grid.set_border_width(10);
-        grid.set_column_spacing(10);
-
-        grid.add(ax);
-        grid.add(bx);
-        grid.add(cx);
-        grid.add(dx);
-
-        grid.attach_next_to(sp, ax, Gtk::POS_BOTTOM, 1, 1);
-        grid.attach_next_to(bp, bx, Gtk::POS_BOTTOM, 1, 1);
-        grid.attach_next_to(si, cx, Gtk::POS_BOTTOM, 1, 1);
-        grid.attach_next_to(di, dx, Gtk::POS_BOTTOM, 1, 1);
-
-        grid.attach_next_to(cs, sp, Gtk::POS_BOTTOM, 1, 1);
-        grid.attach_next_to(ds, bp, Gtk::POS_BOTTOM, 1, 1);
-        grid.attach_next_to(es, si, Gtk::POS_BOTTOM, 1, 1);
-        grid.attach_next_to(ss, di, Gtk::POS_BOTTOM, 1, 1);
-
-        grid.attach_next_to(ip, cs, Gtk::POS_BOTTOM, 1, 1);
-        grid.attach_next_to(flags, ds, Gtk::POS_BOTTOM, 1, 1);
-
+        for(unsigned int i=0;i<__regs.size();++i) {
+            Gtk::TreeModel::Row row = *(ref_tree_model->append());
+            row[columns.register_name] = __regs[i];
+            if(i != __regs.size()-1)
+                row[columns.str_value] = "0x0000";
+        }
     }
 
     void set_registers(const Registers& regs) {
-
+        
         char buffer[32] = {0};
 
-        snprintf(buffer, 32, "AX:0x%04x", regs.ax);
-        ax.set_label(buffer);
-        snprintf(buffer, 32, "BX:0x%04x", regs.bx);
-        bx.set_label(buffer);
-        snprintf(buffer, 32, "CX:0x%04x", regs.cx);
-        cx.set_label(buffer);
-        snprintf(buffer, 32, "DX:0x%04x", regs.dx);
-        dx.set_label(buffer);
+        typedef Gtk::TreeModel::Children t_ch;
+        t_ch ch = ref_tree_model->children();
 
-        snprintf(buffer, 32, "SP:0x%04x", regs.sp);
-        sp.set_label(buffer);
-        snprintf(buffer, 32, "BP:0x%04x", regs.bp);
-        bp.set_label(buffer);
-        snprintf(buffer, 32, "SI:0x%04x", regs.si);
-        si.set_label(buffer);
-        snprintf(buffer, 32, "DI:0x%04x", regs.di);
-        di.set_label(buffer);
-       
-        snprintf(buffer, 32, "CS:0x%04x", regs.cs);
-        cs.set_label(buffer);
-        snprintf(buffer, 32, "DS:0x%04x", regs.ds);
-        ds.set_label(buffer);
-        snprintf(buffer, 32, "ES:0x%04x", regs.es);
-        es.set_label(buffer);
-        snprintf(buffer, 32, "SS:0x%04x", regs.ss);
-        ss.set_label(buffer);
+        t_ch::iterator it = ch.begin();
 
-        snprintf(buffer, 32, "IP:0x%04x", regs.ip);
-        ip.set_label(buffer);
+        Gtk::TreeModel::Row row = *it;
+
+        snprintf(buffer, 32, "0x%04x", regs.ax);
+        row[columns.str_value] = buffer;
+
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.bx);
+        row[columns.str_value] = buffer;
+      
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.cx);
+        row[columns.str_value] = buffer;
+
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.dx);
+        row[columns.str_value] = buffer;
+
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.si);
+        row[columns.str_value] = buffer;
+      
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.di);
+        row[columns.str_value] = buffer;
+
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.sp);
+        row[columns.str_value] = buffer;
+      
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.bp);
+        row[columns.str_value] = buffer;
         
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.cs);
+        row[columns.str_value] = buffer;
+      
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.ds);
+        row[columns.str_value] = buffer;
+
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.ss);
+        row[columns.str_value] = buffer;
+      
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.es);
+        row[columns.str_value] = buffer;
+
+        it++;
+        row = *it;
+        snprintf(buffer, 32, "0x%04x", regs.ip);
+        row[columns.str_value] = buffer;
+        
+        it++;
+        row = *it; 
+        std::string flags_buf;
+        if(regs.flags[CF]) flags_buf += "CF ";
+        if(regs.flags[PF]) flags_buf += "PF ";
+        if(regs.flags[AF]) flags_buf += "AF ";
+        if(regs.flags[ZF]) flags_buf += "ZF ";
+        if(regs.flags[SF]) flags_buf += "SF ";
+        if(regs.flags[TF]) flags_buf += "TF ";
+        if(regs.flags[IF]) flags_buf += "IF ";
+        if(regs.flags[DF]) flags_buf += "DF ";
+        if(regs.flags[OF]) flags_buf += "OF ";
+        row[columns.str_value] = flags_buf;
     }
 
-protected:
-    Gtk::Grid grid;
-    Gtk::Label ax, bx, cx, dx;
-    Gtk::Label sp, bp, si, di;
-    Gtk::Label cs, ds, es, ss;
-    Gtk::Label ip, flags;
-
+    Gtk::ScrolledWindow sw;
+    Gtk::TreeView tv;
+    RegisterColumn columns;
+    Glib::RefPtr<Gtk::ListStore> ref_tree_model;
 };
 
 class ControlButtonsFrame : public Gtk::Frame {
@@ -256,6 +289,7 @@ public:
         : Gtk::Frame("Controls"),
           step("_Step", true),
           cont("_Continue", true),
+          exit("_Exit", true),
           test("_Test", true)
     {
 
@@ -277,12 +311,15 @@ public:
         grid.add(step);
         grid.add(cont);
         grid.add(test);
+        grid.add(exit);
 
     }
 
     Gtk::Grid grid;
+
     Gtk::Button step, cont;
-    
+    Gtk::Button exit;
+
     Gtk::Button test;
 
 };
@@ -319,9 +356,9 @@ private:
         panel_left.set_orientation(Gtk::Orientation::ORIENTATION_VERTICAL);
         panel_left.set_spacing(10);
 
-        panel_left.pack_start(regs, Gtk::PACK_SHRINK);
-        panel_left.pack_start(buttons_frame, Gtk::PACK_SHRINK);
+        panel_left.pack_start(regs);
         panel_left.pack_start(mem_window);
+        panel_left.pack_start(buttons_frame);
 
         root_box.pack_start(panel_left, Gtk::PACK_SHRINK);
         root_box.pack_start(code);
@@ -338,6 +375,9 @@ private:
         buttons_frame.step.signal_clicked().connect(
                 sigc::mem_fun(*this, &Box8086_GUI::on_step_clicked));
 
+        buttons_frame.exit.signal_clicked().connect(
+                sigc::mem_fun(*this, &Box8086_GUI::on_exit_clicked));
+
     }
 
     void setup() {
@@ -352,7 +392,7 @@ private:
 
         mem_window.dump_memory(60, 0x0000, &(*mem)[0]);
 
-        regs.set_registers(cpu.getRegisters());
+       // regs.set_registers(cpu.getRegisters());
 
     }
 
@@ -372,7 +412,12 @@ protected:
 
     }
 
-    RegistersFrame regs;
+
+    void on_exit_clicked() {
+        exit(0);
+    }
+
+    RegistersViewFrame regs;
     CodeViewWindow code;
     MemoryViewWindow mem_window; 
     ControlButtonsFrame buttons_frame;
@@ -386,7 +431,7 @@ protected:
     CPU cpu;
 
 
-};
+}; 
 
 int main(int argc, char** argv) {
    
