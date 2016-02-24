@@ -19,7 +19,7 @@ public:
     
     void step();
     
-private:
+//private:
 
     dword IPReal = 0;
 
@@ -39,7 +39,6 @@ private:
     void setOverrides();
 
     uword getOverridedSegmentValue();
-    uword getFullInstructionSizeModRM();
     dword getAbsoluteAddressModRM();
    
     template<bool, bool>

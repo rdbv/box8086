@@ -10,9 +10,12 @@ SRC_DIR=src
 CPU_DIR=$(SRC_DIR)/CPU
 GUI_DIR=$(SRC_DIR)/GUI
 DIS_DIR=$(SRC_DIR)/Disasm
+TEST_DIR=tests
 MAIN_LINK=bin/Memory.o bin/CPU.o bin/Disasm.o
+TEST_BIN=$(BIN_DIR)/tests_bin
 
-all: testbin Disasm CPU Memory GUI
+all: testbin Disasm CPU Memory GUI tests
+tests: TestCPU0
 
 #######################################################################
 
@@ -37,8 +40,14 @@ Disasm:
 	@$(CC) $(CFLAGS) $(SRC_DIR)/Disasm/Disasm.cc -c -o bin/Disasm.o 
 
 clean:
-	@rm -f bin/*
+	@find bin -maxdepth 1 -type f -exec rm -f {} \;
+	@rm -f bin/tests_bin/*
 	# Cleaned...
+
+# Tests
+TestCPU0:
+	# Compiling TestCPU0
+	@$(CC) $(CFLAGS) $(TEST_DIR)/TestCPU0.cc -o $(TEST_BIN)/TestCPU0 -lboost_unit_test_framework $(MAIN_LINK)
 
 # For easy compiling in vim.
 
@@ -50,6 +59,8 @@ testbin_vim: testbin
 Opcodes_vim: Disasm main
 main_vim: main
 bochs_vim: bochs
+TestCPU0_vim: TestCPU0
+
 #######################################################################
 
 # Binary tests stuff

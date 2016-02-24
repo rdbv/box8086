@@ -44,7 +44,7 @@ void CPU::execute() {
             setOperands<false, false>();
             tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);
             *lhs_b += *rhs_b;
-            setFlags<ubyte, false>(*lhs_b);
+            setFlags<ubyte, true>(*lhs_b);
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x01:	//01 ADD Ev Gv 
@@ -52,7 +52,7 @@ void CPU::execute() {
             setOperands<false, true>();
             tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
             *lhs_w += *rhs_w;
-            setFlags<uword, false>(*lhs_w);
+            setFlags<uword, true>(*lhs_w);
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x02:	//02 ADD Gb Eb 
@@ -60,10 +60,16 @@ void CPU::execute() {
             setOperands<true, false>();
             tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);
             *lhs_b += *rhs_b;
-            setFlags<ubyte, false>(*lhs_b);
+            setFlags<ubyte, true>(*lhs_b);
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x03:	//03 ADD Gv Ev 
+            mod.decode(memory[IPReal+1]);
+            setOperands<true, true>();
+            tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
+            *lhs_w += *rhs_w;
+            setFlags<uword, true>(*lhs_w);
+            incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x04:	//04 ADD AL Ib 
         break;
@@ -763,18 +769,18 @@ void CPU::setOperands() {
 
 }
 
-template<typename T, bool CheckSignBit>
-void CPU::setFlags(T Value) {
+template<typename T, bool checkSignBit>
+void CPU::setFlags(T value) {
 
     const bool isWord = std::is_same<T, sword>() || std::is_same<T, uword>();
-    regs.flags[ZF] = Value == 0;
+    regs.flags[ZF] = value == 0;
 
     if(!isWord) {
-        regs.flags[PF] = parity[Value];
-        regs.flags[SF] = Value & 0x80;
+        regs.flags[PF] = parity[value];
+        regs.flags[SF] = value & 0x80;
         regs.flags[CF] = tmp_w & 0xFF00; 
         
-        if(CheckSignBit) {
+        if(checkSignBit) {
             regs.flags[OF] = ((tmp_w ^ lhs_buf_b) & (tmp_w ^ rhs_buf_b) & 0x80) == 0x80;
             regs.flags[AF] = ((lhs_buf_b ^ rhs_buf_b ^ tmp_w) & 0x10) == 0x10;  
         } 
@@ -785,11 +791,11 @@ void CPU::setFlags(T Value) {
     
     }
     else {
-        regs.flags[PF] = parity[Value & 255];
-        regs.flags[SF] = Value & 0x8000;
+        regs.flags[PF] = parity[value & 255];
+        regs.flags[SF] = value & 0x8000;
         regs.flags[CF] = tmp_d & 0xFFFF0000;
         
-        if(CheckSignBit) {
+        if(checkSignBit) {
             regs.flags[OF] = ((tmp_d ^ lhs_buf_w) & (tmp_d ^ rhs_buf_w) & 0x8000) == 0x8000; 
             regs.flags[AF] = ((lhs_buf_w ^ rhs_buf_w ^ tmp_d) & 0x10) == 0x10; 
         } 
