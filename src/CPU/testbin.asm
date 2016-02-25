@@ -1,17 +1,10 @@
 cpu 8086
 org 0x7c00
 
-add [0xface], dl
-
-add [bx], cl
-add [bx+di], cl
-
-mov ax, 0x7f
-mov bl, 0x1
-
-add al, al
-add al, al
-add al, bl
+mov ax, 0x31ac
+or ax, 0xfade
+or ax, 0xfbfe
+or ax, 0x0fff
 
 times 510 - ($-$$) db 0
 dw 0xAA55

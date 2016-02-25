@@ -40,11 +40,13 @@ public:
 
     uword getOverridedSegmentValue();
     dword getAbsoluteAddressModRM();
-   
+
+    uword* getStackTopPtr();
+
     template<bool, bool>
     void setOperands();
     
-    template<typename T, bool>
+    template<typename T, bool, bool isLogic = false>
     void setFlags(T);
 
     inline void incIP(int Steps) {

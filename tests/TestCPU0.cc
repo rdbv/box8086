@@ -56,7 +56,67 @@ BOOST_AUTO_TEST_CASE( testAbsAddrWithoutDisplacement ) {
     cpu.mod.decode(BX);
     cpu.regs.bx = 0xffff;
     BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), (uword) (0xffff) );
+}
+
+BOOST_AUTO_TEST_CASE( testAbsAddrDisplacement ) {
+
+    CPU cpu;
+    Memory *mem = cpu.getMemory();
+
+    ubyte code [] = {
+        0x00, 0x40, 0x0f,         // add [bx+si+0xf], al
+        0x00, 0x80, 0x3f, 0x03,   // add [bx+si+0x33f], al
+        0x00, 0x40, 0xf1,         // add [bx+si-0xf], al
+        0x00, 0x80, 0xc1, 0xfc,   // add [bx+si-0x33f], al
+    };
+
+    memcpy(MEM(mem), code, sizeof(code));
+
+    /* Add displacement */
+    // byte 
+    cpu.mod.decode(0x40);
+    cpu.regs.bx = 0xf31;
+    cpu.regs.si = 0x13f;
+    BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), (uword) (0xf31 + 0x13f) + 0xf );
+
+    // word
+    memcpy(MEM(mem), &code[3], 4);
+    cpu.mod.decode(0x80);
+    BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), (uword) (0xf31 + 0x13f) + 0x33f );
+
+    /* Sub displacement */
+    // byte
+    memcpy(MEM(mem), &code[7], 3);
+    cpu.mod.decode(0x40);
+    BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), (uword) (0xf31 + 0x13f) - 0xf );
+
+    // word
+    memcpy(MEM(mem), &code[10], 4);
+    cpu.mod.decode(0x80);
+    BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), (uword) (0xf31 + 0x13f) - 0x33f );
+}
+
+
+BOOST_AUTO_TEST_CASE( setOperandsTest ) {
+
+    CPU cpu;
+    Memory *mem = cpu.getMemory();
+
+    ubyte code[] = {
+        0x00, 0xd8,         // add al, bl
+
+    };
+
+    memcpy(MEM(mem), code, sizeof(code));
+    cpu.mod.decode(0xd8);
+    cpu.setOperands<false, false>();
+    BOOST_REQUIRE_EQUAL( cpu.lhs_b, &cpu.regs.al);
+    BOOST_REQUIRE_EQUAL( cpu.rhs_b, &cpu.regs.bl);
+
 
 
 }
+
+
+
 
