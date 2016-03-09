@@ -23,6 +23,10 @@ main:
 	# Compiling main
 	@$(CC) $(CFLAGS)  $(SRC_DIR)/main.cpp -o bin/main $(MAIN_LINK)
 
+NCGui:
+	# Compiling NCGui
+	@$(CC) $(CFLAGS) $(GUI_DIR)/NCGui.cpp -o bin/main $(MAIN_LINK) -lncurses
+
 GUI:
 	# Compiling GUI
 	@$(CC) $(CFLAGS) $(GUI_DIR)/GUI.cpp -o bin/main $(MAIN_LINK) `pkg-config --libs --cflags gtkmm-3.0`
@@ -51,10 +55,11 @@ TestCPU0:
 
 # For easy compiling in vim.
 
-CPU_vim: CPU GUI
+CPU_vim: CPU 
 Memory_vim: Memory GUI
 Disasm_vim: Disasm main
 GUI_vim: GUI 
+NCGui_vim: NCGui
 testbin_vim: testbin
 Opcodes_vim: Disasm main
 main_vim: main

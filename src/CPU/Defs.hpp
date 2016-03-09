@@ -4,10 +4,11 @@
 #include <cstdint>
 #include <cassert>
 
-/* Memory config 
+/* 
+ * Memory config 
  * 1 MB memory
  */
-#define DEFAULT_MEMORY_SIZE 1000 * 1000
+#define DEFAULT_MEMORY_SIZE 0x100000
 
 /* Standard integers used in project */
 typedef int8_t   sbyte;
@@ -16,7 +17,6 @@ typedef int16_t  sword;
 typedef uint16_t uword;
 typedef int32_t  sdword;
 typedef uint32_t dword;
-
 
 /* Prefixes opcodes */
 #define ES_OVR      0x26

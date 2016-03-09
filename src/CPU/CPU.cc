@@ -44,7 +44,7 @@ void CPU::execute() {
             setOperands<false, false>();
             tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);
             *lhs_b += *rhs_b;
-            setFlags<ubyte, true>(*lhs_b);
+            //setFlagsStandard<ubyte, true>(*lhs_b);
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x01:	//01 ADD Ev Gv 
@@ -52,7 +52,7 @@ void CPU::execute() {
             setOperands<false, true>();
             tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
             *lhs_w += *rhs_w;
-            setFlags<uword, true>(*lhs_w);
+            //setFlags<uword, true>(*lhs_w);
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x02:	//02 ADD Gb Eb 
@@ -60,7 +60,7 @@ void CPU::execute() {
             setOperands<true, false>();
             tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);
             *lhs_b += *rhs_b;
-            setFlags<ubyte, true>(*lhs_b);
+            //setFlags<ubyte, true>(*lhs_b);
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x03:	//03 ADD Gv Ev 
@@ -68,89 +68,34 @@ void CPU::execute() {
             setOperands<true, true>();
             tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
             *lhs_w += *rhs_w;
-            setFlags<uword, true>(*lhs_w);
+            //setFlags<uword, true>(*lhs_w);
             incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x04:	//04 ADD AL Ib 
-            lhs_buf_b = regs.al, rhs_buf_b = memory.getRawData<ubyte, 1, 0>(IPReal); 
-            tmp_w = (uword) (((uword) regs.al) + ((uword) rhs_buf_b));
-            regs.al += rhs_buf_b;
-            setFlags<ubyte, true>(regs.al);
-            incIP(ovrd.getOverrideCount() + 2);
         break;
         case 0x05:	//05 ADD eAX Iv 
-            lhs_buf_w = regs.ax, rhs_buf_w = memory.getRawData<uword, 2, 1>(IPReal);
-            tmp_d = ((dword) regs.ax) + ((dword) rhs_buf_w);
-            regs.ax += rhs_buf_w;
-            setFlags<uword, true>(regs.ax);
-            incIP(ovrd.getOverrideCount() + 3);
         break;
         case 0x06:	//06 PUSH ES 
-            regs.sp -= 2;
-            *getStackTopPtr() = regs.es;
-            incIP(ovrd.getOverrideCount() + 1);
         break;
         case 0x07:	//07 POP ES 
-            regs.sp += 2;
-            regs.es = *getStackTopPtr();
-            incIP(ovrd.getOverrideCount() + 1);
         break;
         case 0x08:	//08 OR Eb Gb 
-            mod.decode(memory[IPReal+1]);
-            setOperands<false, false>();
-            tmp_w = ((uword) *lhs_b) | ((uword) *rhs_b);
-            *lhs_b |= *rhs_b;
-            setFlags<ubyte, false, true>(*lhs_b);
-            incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x09:	//09 OR Ev Gv 
-            mod.decode(memory[IPReal+1]);
-            setOperands<false, true>();
-            tmp_d = ((dword) *lhs_w) | ((dword) *rhs_w);
-            *lhs_w |= *rhs_w;
-            setFlags<uword, false, true>(*lhs_w);
-            incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x0A:	//0A OR Gb Eb 
-            mod.decode(memory[IPReal+1]);
-            setOperands<true, false>();
-            tmp_w = ((uword) *lhs_b) | ((uword) *rhs_b);
-            *lhs_b |= *rhs_b;
-            setFlags<ubyte, false, true>(*lhs_b);
-            incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x0B:	//0B OR Gv Ev 
-            mod.decode(memory[IPReal+1]);
-            setOperands<true, true>();
-            tmp_d = ((dword) *lhs_w) | ((dword) *rhs_w);
-            *lhs_w |= *rhs_w;
-            setFlags<uword, false, true>(*lhs_w);
-            incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
         break;
         case 0x0C:	//0C OR AL Ib 
-            lhs_buf_b = regs.al, rhs_buf_b = memory.getRawData<ubyte, 1, 0>(IPReal);
-            tmp_w = ((uword) regs.al) | ((uword) rhs_buf_b);
-            regs.al |= rhs_buf_b;
-            setFlags<ubyte, false, true>(regs.al);
-            incIP(ovrd.getOverrideCount() + 2);
         break;
         case 0x0D:	//0D OR eAX Iv 
-            lhs_buf_w = regs.ax, rhs_buf_w = memory.getRawData<uword, 2, 1>(IPReal);
-            tmp_d = ((dword) regs.ax) | ((dword) rhs_buf_w);
-            regs.ax |= rhs_buf_w;
-            setFlags<uword, false, true>(regs.ax);
-            incIP(ovrd.getOverrideCount() + 3);
         break;
         case 0x0E:	//0E PUSH CS 
-            regs.sp -= 2;
-            *getStackTopPtr() = regs.cs;
         break;
         case 0x0F:	//0F -- 
-            printf("[ERROR] Unimplemented opcode (0xf)\n");
-            exit(0);
         break;
         case 0x10:	//10 ADC Eb Gb 
-
         break;
         case 0x11:	//11 ADC Ev Gv 
         break;
@@ -673,6 +618,14 @@ void CPU::execute() {
 
 uword CPU::getOverridedSegmentValue() {
 
+    auto modSelector = mod.rm.to_ulong();
+  
+    /* If mode is BP* then segment register is SS not DS */
+    if( modSelector == BP_SI || 
+        modSelector == BP_DI ||
+        modSelector == BP )
+        return regs.ss;
+
     switch(ovrd.regOverride) {
         case 0:
             return 0;
@@ -829,6 +782,8 @@ void CPU::setOperands() {
     }
 
 }
+// c-s for adc, add, 
+// n-c-s for sbb, sub, 
 
 template<typename T, bool checkSignBit, bool isLogic>
 void CPU::setFlags(T value) {
@@ -847,6 +802,7 @@ void CPU::setFlags(T value) {
                 regs.flags[AF] = ((lhs_buf_b ^ rhs_buf_b ^ tmp_w) & 0x10) == 0x10;  
         } 
         else {
+            
             regs.flags[OF] = ((tmp_w ^ lhs_buf_b) & (tmp_w ^ rhs_buf_b) & 0x80);
             if(!isLogic)
                 regs.flags[AF] = ((lhs_buf_b ^ rhs_buf_b ^ tmp_w) & 0x10);  
@@ -875,4 +831,53 @@ void CPU::setFlags(T value) {
         regs.flags[OF] = 0;
         regs.flags[CF] = 0;
     }
+    assert(false);
+} 
+
+/* ADD, ADC, Logic operations */
+template<typename T, bool checkSignBit, bool isLogic>
+void CPU::setFlagsStandard(T value) {
+    
+    const bool isWord = std::is_same<T, sword>() || std::is_same<T, uword>();
+    regs.flags[ZF] = value == 0;
+    bool savedAF = regs.flags[AF];
+
+    if(!isWord) {
+        regs.flags[PF] = parity[value];
+        regs.flags[SF] = value & 0x80;
+        regs.flags[CF] = tmp_w & 0xFF00; 
+        
+        if(checkSignBit) {
+            regs.flags[OF] = ((tmp_w ^ lhs_buf_b) & (tmp_w ^ rhs_buf_b) & 0x80) == 0x80;
+            regs.flags[AF] = ((lhs_buf_b ^ rhs_buf_b ^ tmp_w) & 0x10) == 0x10;  
+        }
+        else {
+            regs.flags[OF] = ((tmp_w ^ lhs_buf_b) & (tmp_w ^ rhs_buf_b) & 0x80);
+            regs.flags[AF] = ((lhs_buf_b ^ rhs_buf_b ^ tmp_w) & 0x10);  
+        }
+
+    }
+    else {
+        regs.flags[PF] = parity[value & 255];
+        regs.flags[SF] = value & 0x8000;
+        regs.flags[CF] = tmp_d & 0xFFFF0000;
+        
+        if(checkSignBit) {
+            regs.flags[OF] = ((tmp_d ^ lhs_buf_w) & (tmp_d ^ rhs_buf_w) & 0x8000) == 0x8000; 
+            regs.flags[AF] = ((lhs_buf_w ^ rhs_buf_w ^ tmp_d) & 0x10) == 0x10; 
+        }
+        else {
+            regs.flags[OF] = ((tmp_d ^ lhs_buf_w) & (tmp_d ^ rhs_buf_w) & 0x8000);
+            regs.flags[AF] = ((lhs_buf_w ^ rhs_buf_w ^ tmp_d) & 0x10); 
+        }
+
+    }
+
+    /* Logic operations always clear CF && OF */
+    if(isLogic) {
+        regs.flags[OF] = 0;
+        regs.flags[CF] = 0;
+        regs.flags[AF] = savedAF;
+    }
+
 }

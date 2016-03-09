@@ -49,12 +49,17 @@ public:
     template<typename T, bool, bool isLogic = false>
     void setFlags(T);
 
-    inline void incIP(int Steps) {
-        regs.ip += Steps; 
+    template<typename T, bool, bool isLogic = false>
+    void setFlagsStandard(T);
+    
+    /* Increment IP */
+    inline void incIP(int steps) {
+        regs.ip += steps; 
     }
 
-    inline uword getAbs(uword Seg, uword Off) {
-        return (Seg << 4) + Off; 
+    /* Generate psy. address */
+    inline uword getAbs(uword seg, uword off) {
+        return (seg << 4) + off; 
     }
 
     /* Lookups */

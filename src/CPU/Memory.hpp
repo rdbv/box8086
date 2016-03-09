@@ -15,17 +15,17 @@ public:
     const ubyte& operator[](std::size_t) const;  
 
 
-    template<typename T, int First, int Second>
-    inline T getRawData(int Offset) { 
+    template<typename T, int first, int second>
+    inline T getRawData(int offset) { 
           
         const bool isByte = std::is_same<T, ubyte>() || std::is_same<T, sbyte>();
         const bool isWord = std::is_same<T, uword>() || std::is_same<T, sword>(); 
         static_assert(isByte ^ isWord, "Bad size! (Or isByte and isWord equal true, so WTF?)");   
 
         if(isByte)
-            return _memory[Offset + First]; 
+            return _memory[offset + first]; 
         else 
-            return _memory[Offset + First] << 8 | _memory[Offset + Second];
+            return _memory[offset + first] << 8 | _memory[offset + second];
 
     } 
 

@@ -99,21 +99,6 @@ BOOST_AUTO_TEST_CASE( testAbsAddrDisplacement ) {
 
 BOOST_AUTO_TEST_CASE( setOperandsTest ) {
 
-    CPU cpu;
-    Memory *mem = cpu.getMemory();
-
-    ubyte code[] = {
-        0x00, 0xd8,         // add al, bl
-
-    };
-
-    memcpy(MEM(mem), code, sizeof(code));
-    cpu.mod.decode(0xd8);
-    cpu.setOperands<false, false>();
-    BOOST_REQUIRE_EQUAL( cpu.lhs_b, &cpu.regs.al);
-    BOOST_REQUIRE_EQUAL( cpu.rhs_b, &cpu.regs.bl);
-
-
 
 }
 
