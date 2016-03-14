@@ -48,19 +48,11 @@ public:
     
     template<typename T, bool, bool isLogic = false>
     void setFlags(T);
-
-    template<typename T, bool, bool isLogic = false>
-    void setFlagsStandard(T);
     
-    /* Increment IP */
-    inline void incIP(int steps) {
-        regs.ip += steps; 
-    }
-
-    /* Generate psy. address */
-    inline uword getAbs(uword seg, uword off) {
-        return (seg << 4) + off; 
-    }
+  
+    void incIP(unsigned int);
+    
+    dword getAbs(uword, uword);
 
     /* Lookups */
     std::unordered_map<int, ubyte*> byteRegs {

@@ -35,6 +35,7 @@ void CPU::fetch() {
 }
 
 /* Just execute */
+
 void CPU::execute() {
 
     switch(memory[IPReal])
@@ -628,7 +629,7 @@ uword CPU::getOverridedSegmentValue() {
 
     switch(ovrd.regOverride) {
         case 0:
-            return 0;
+            return regs.ds;
         case CS_OVR:
             return regs.cs;
         case DS_OVR:
@@ -653,6 +654,8 @@ dword CPU::getAbsoluteAddressModRM() {
     assert(mod.mode != REGISTER_MODE);
     
     uword absAddr = 0;
+
+    //printf("\nMode:%s Rm:%s Reg:%s\n", mod.mode.to_string().c_str(), mod.rm.to_string().c_str(), mod.reg.to_string().c_str()) ;
 
     if(mod.mode == NO_DISPLACEMENT && mod.rm == UWORD)
         return getAbs(getOverridedSegmentValue(), memory.getRawData<uword, 3, 2>(IPReal));
@@ -692,7 +695,8 @@ dword CPU::getAbsoluteAddressModRM() {
         break;
         
     }
-    
+   
+
     if(mod.mode == BYTE_DISPLACEMENT) absAddr += memory.getRawData<sbyte, 2, 0>(IPReal); 
     if(mod.mode == WORD_DISPLACEMENT) absAddr += memory.getRawData<sword, 3, 2>(IPReal);
 
@@ -834,50 +838,21 @@ void CPU::setFlags(T value) {
     assert(false);
 } 
 
-/* ADD, ADC, Logic operations */
-template<typename T, bool checkSignBit, bool isLogic>
-void CPU::setFlagsStandard(T value) {
-    
-    const bool isWord = std::is_same<T, sword>() || std::is_same<T, uword>();
-    regs.flags[ZF] = value == 0;
-    bool savedAF = regs.flags[AF];
+/* Increment IP */
+void CPU::incIP(unsigned int steps) {
+    regs.ip += steps; 
+}
 
-    if(!isWord) {
-        regs.flags[PF] = parity[value];
-        regs.flags[SF] = value & 0x80;
-        regs.flags[CF] = tmp_w & 0xFF00; 
-        
-        if(checkSignBit) {
-            regs.flags[OF] = ((tmp_w ^ lhs_buf_b) & (tmp_w ^ rhs_buf_b) & 0x80) == 0x80;
-            regs.flags[AF] = ((lhs_buf_b ^ rhs_buf_b ^ tmp_w) & 0x10) == 0x10;  
-        }
-        else {
-            regs.flags[OF] = ((tmp_w ^ lhs_buf_b) & (tmp_w ^ rhs_buf_b) & 0x80);
-            regs.flags[AF] = ((lhs_buf_b ^ rhs_buf_b ^ tmp_w) & 0x10);  
-        }
-
-    }
-    else {
-        regs.flags[PF] = parity[value & 255];
-        regs.flags[SF] = value & 0x8000;
-        regs.flags[CF] = tmp_d & 0xFFFF0000;
-        
-        if(checkSignBit) {
-            regs.flags[OF] = ((tmp_d ^ lhs_buf_w) & (tmp_d ^ rhs_buf_w) & 0x8000) == 0x8000; 
-            regs.flags[AF] = ((lhs_buf_w ^ rhs_buf_w ^ tmp_d) & 0x10) == 0x10; 
-        }
-        else {
-            regs.flags[OF] = ((tmp_d ^ lhs_buf_w) & (tmp_d ^ rhs_buf_w) & 0x8000);
-            regs.flags[AF] = ((lhs_buf_w ^ rhs_buf_w ^ tmp_d) & 0x10); 
-        }
-
-    }
-
-    /* Logic operations always clear CF && OF */
-    if(isLogic) {
-        regs.flags[OF] = 0;
-        regs.flags[CF] = 0;
-        regs.flags[AF] = savedAF;
-    }
+/* Generate psy. address */
+dword CPU::getAbs(uword seg, uword off) {
+   
+    dword absAddr = (seg << 4) + off;
+  
+    /* If overflow in 20-bit address, then wrap around */
+    if(absAddr >= DEFAULT_MEMORY_SIZE)
+        return absAddr % DEFAULT_MEMORY_SIZE;
+    else
+        return absAddr;
 
 }
+

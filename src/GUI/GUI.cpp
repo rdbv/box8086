@@ -434,9 +434,7 @@ protected:
 }; 
 
 int main(int argc, char** argv) {
-   
     auto app = Gtk::Application::create(argc, argv, "org.gtkmm.example");
-
     Box8086_GUI gui; 
     return app->run(gui);
 }

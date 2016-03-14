@@ -33,7 +33,7 @@ GUI:
 
 CPU:
 	# Compiling CPU
-	@$(CC) $(CFLAGS) $(CPU_DIR)/CPU.cc -c -o bin/CPU.o 
+	@$(CC) $(CFLAGS) $(CPU_DIR)/CPU.cc -c -g -o bin/CPU.o 
 
 Memory:
 	# Compiling Memory	

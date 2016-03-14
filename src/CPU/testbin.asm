@@ -1,15 +1,18 @@
 cpu 8086
 org 0x7c00
 
+mov cl, 0xbb
 
-mov ax, [bp+di]
-mov ax, [bp+si]
-mov ax, [bp]
+mov bx, 0xffff
+mov ds, bx
 
-mov al, 0xff
-mov bl, 0x1
-add al, bl
-hlt
+mov bx, 0x0000
+lop:
+    mov byte [ds:bx], cl
+    inc bx
+jmp lop
+
+
 
 times 510 - ($-$$) db 0
 dw 0xAA55
