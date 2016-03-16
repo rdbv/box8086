@@ -1,5 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE TestCPU0
+
 #include <boost/test/unit_test.hpp>
 #include "../src/CPU/CPU.hpp"
 
