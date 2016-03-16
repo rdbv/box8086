@@ -1,10 +1,16 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE TestCPU0
 #include <boost/test/unit_test.hpp>
-
 #include "../src/CPU/CPU.hpp"
 
 #define MEM(x) ( &(*x)[0] )
+
+/* =============== Random Dump of some testing tests =============== */
+// All tests here is veery basic tests, i'm still newbie in software testing :P
+
+
+/* Test of getAbsoluteAddress() func
+   don't tests segmentation or displacements */
 
 BOOST_AUTO_TEST_CASE( getAbsAddrWithoutDisplacement ) {
     
@@ -68,6 +74,8 @@ BOOST_AUTO_TEST_CASE( getAbsAddrWithoutDisplacement ) {
 
 }
 
+/* Now test with displacements */
+
 BOOST_AUTO_TEST_CASE( getAbsAddrWithDisplacement0 ) {
 
     uint32_t absAddr;
@@ -78,7 +86,8 @@ BOOST_AUTO_TEST_CASE( getAbsAddrWithDisplacement0 ) {
         0x00, 0x87, 0x24, 0x13, // add [bx+0x1324], al
         0x00, 0x47, 0xed,       // add [bx-0x13], al
         0x00, 0x87, 0xdc, 0xec, // add [bx-0x1324], al
-
+        0x00, 0x40, 0x36,       // add [bx+si+0x36], al
+        0x00, 0x40, 0xca,       // add [bx+si-0x36], al 
     }; 
     memcpy(MEM(mem), code, sizeof(code) );
 
@@ -113,8 +122,29 @@ BOOST_AUTO_TEST_CASE( getAbsAddrWithDisplacement0 ) {
     absAddr = 0x5555 - 0x1324;
     BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), absAddr );
 
+    /* ========= */
+    cpu.IPReal += 4;
+    cpu.mod.decode(0x40);
+    cpu.regs.bx = 0x1234;
+    cpu.regs.si = 0x4444;
+    
+    absAddr = 0x1234 + 0x4444 + 0x36;
+    BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), absAddr );
+
+    /* ========= */
+    cpu.IPReal += 3;
+    cpu.mod.decode(0x40);
+    cpu.regs.bx = 0x4444;
+    cpu.regs.si = 0xface;
+
+    absAddr = ((uword)(0x4444 + 0xface)) - 0x36;
+
+    BOOST_REQUIRE_EQUAL( cpu.getAbsoluteAddressModRM(), absAddr );
+
 
 }
+
+/* Now with displacements, segements, and some quirks (memory wrapping) */
 
 BOOST_AUTO_TEST_CASE( getAbsAddrSegments0 ) {
 
@@ -136,4 +166,9 @@ BOOST_AUTO_TEST_CASE( getAbsAddrSegments0 ) {
 
 }
 
+BOOST_AUTO_TEST_CASE( setOperands0 ) {
+
+    CPU cpu;
+
+}
 

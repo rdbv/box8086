@@ -39,6 +39,7 @@ struct ModRM {
             
             case WORD_DISPLACEMENT:
                 return 4 + overrideCount;
+
             default:
                 assert(false);
         }

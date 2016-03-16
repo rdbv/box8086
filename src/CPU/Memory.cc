@@ -1,17 +1,17 @@
 #include "Memory.hpp"
 
 
-ubyte& Memory::operator[] (std::size_t Index) {
+ubyte& Memory::operator[] (std::size_t index) {
     
-    assert(Index < DEFAULT_MEMORY_SIZE); 
-    return _memory[Index]; 
+    assert(index < DEFAULT_MEMORY_SIZE); 
+    return _memory[index]; 
 
 }
 
-const ubyte& Memory::operator[] (std::size_t Index) const {
+const ubyte& Memory::operator[] (std::size_t index) const {
 
-    assert(Index < DEFAULT_MEMORY_SIZE);
-    return _memory[Index];
+    assert(index < DEFAULT_MEMORY_SIZE);
+    return _memory[index];
 
 }
 

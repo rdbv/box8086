@@ -1,16 +1,17 @@
 cpu 8086
 org 0x7c00
 
-mov cl, 0xbb
+add [bx+si-0x36], al
 
-mov bx, 0xffff
-mov ds, bx
+mov al, 0xff
+mov bl, 0x1
+add [bx], al
 
-mov bx, 0x0000
-lop:
-    mov byte [ds:bx], cl
-    inc bx
-jmp lop
+add al, bl
+
+add al, al
+add al, al
+add al, al
 
 
 

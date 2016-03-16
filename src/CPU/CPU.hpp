@@ -18,8 +18,10 @@ public:
     Registers getRegisters();
     
     void step();
-    
+
 //private:
+
+// ****************************** 
 
     dword IPReal = 0;
 
@@ -28,11 +30,15 @@ public:
     Registers regs;
     Overrides ovrd;
 
-    ubyte* lhs_b, *rhs_b, lhs_buf_b, rhs_buf_b; 
-    uword* lhs_w, *rhs_w, lhs_buf_w, rhs_buf_w;
-    
+    ubyte* lhs_b, *rhs_b;
+    ubyte  lhs_buf_b, rhs_buf_b; 
     uword  tmp_w;
+    
+    uword* lhs_w, *rhs_w;
+    uword  lhs_buf_w, rhs_buf_w;
     dword  tmp_d;
+
+// ****************************** 
 
     void fetch();
     void execute();
@@ -43,16 +49,33 @@ public:
 
     uword* getStackTopPtr();
 
+// ****************************** 
+
     template<bool, bool>
     void setOperands();
     
-    template<typename T, bool, bool isLogic = false>
-    void setFlags(T);
-    
-  
+    template<typename T>
+    inline void flagSZP(T);
+
+    template<typename T>
+    inline void flagLogic(T);
+
     void incIP(unsigned int);
-    
     dword getAbs(uword, uword);
+
+// ****************************** 
+
+    inline void addEbGb();      // 0x00
+    inline void addEvGv();      // 0x01
+    inline void addGbEb();      // 0x02
+    inline void addGvEv();      // 0x03
+
+
+    
+    inline void addByteFlags();
+    inline void addWordFlags();
+
+// ****************************** 
 
     /* Lookups */
     std::unordered_map<int, ubyte*> byteRegs {
