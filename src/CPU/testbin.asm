@@ -1,10 +1,7 @@
 cpu 8086
 org 0x7c00
 
-mov al, 127
-mov bl, 1
-add al, bl
-
+add ax, 0xface
 
 
 times 510 - ($-$$) db 0

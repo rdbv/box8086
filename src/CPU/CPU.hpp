@@ -33,11 +33,11 @@ public:
     ubyte* lhs_b, *rhs_b;
     ubyte  lhs_buf_b, rhs_buf_b; 
     uword  tmp_w;
-    
+
     uword* lhs_w, *rhs_w;
     uword  lhs_buf_w, rhs_buf_w;
     dword  tmp_d;
-
+   
 // ****************************** 
 
     void fetch();
@@ -55,7 +55,7 @@ public:
     void setOperands();
     
     template<typename T>
-    inline void flagSZP(T);
+    inline void flagCSZP(T);
 
     template<typename T>
     inline void flagLogic(T);
@@ -69,6 +69,8 @@ public:
     inline void addEvGv();      // 0x01
     inline void addGbEb();      // 0x02
     inline void addGvEv();      // 0x03
+    inline void addAlIb();      // 0x04
+    inline void addAxIv();      // 0x05
 
 
     
