@@ -60,26 +60,37 @@ void CPU::execute() {
             addAxIv();
         break;
         case 0x06:	//06 PUSH ES 
+            pushEs();
         break;
         case 0x07:	//07 POP ES 
+            popEs();
         break;
         case 0x08:	//08 OR Eb Gb 
+            orEbGb();
         break;
         case 0x09:	//09 OR Ev Gv 
+            orEvGv();
         break;
         case 0x0A:	//0A OR Gb Eb 
+            orGbEb();
         break;
         case 0x0B:	//0B OR Gv Ev 
+            orGvEv();
         break;
         case 0x0C:	//0C OR AL Ib 
+            orAlIb();
         break;
         case 0x0D:	//0D OR eAX Iv 
+            orAxIv();
         break;
         case 0x0E:	//0E PUSH CS 
+            pushCs();
         break;
         case 0x0F:	//0F -- 
+            assert(false);
         break;
         case 0x10:	//10 ADC Eb Gb 
+
         break;
         case 0x11:	//11 ADC Ev Gv 
         break;
@@ -612,11 +623,10 @@ uword CPU::getOverridedSegmentValue() {
 
     switch(ovrd.regOverride) {
         case 0:
+        case DS_OVR:
             return regs.ds;
         case CS_OVR:
             return regs.cs;
-        case DS_OVR:
-            return regs.ds;
         case ES_OVR:
             return regs.es;
         case SS_OVR:
@@ -789,14 +799,27 @@ dword CPU::getAbs(uword seg, uword off) {
 
 }
 
-void CPU::addByteFlags() {
+template<typename T, unsigned int size>
+void CPU::push(T val) {
 
+    regs.sp -= size;
+    T* topPtr = (T*) &memory[getAbs(regs.ss, regs.sp)];
+    *topPtr = val;
+
+}
+
+template<typename T, unsigned int size>
+T CPU::pop() {
+
+    T val = *((T*) &memory[getAbs(regs.ss, regs.sp)]);
+    regs.sp += size;
+    return val;
 
 }
 
 /* Set carry, sign, zero, parity flags */
 
-template<typename T>
+template<typename T, bool isLogicOp>
 void CPU::flagCSZP(T val) {
 
     const bool isWord = std::is_same<T, sword>() || std::is_same<T, uword>();
@@ -804,12 +827,18 @@ void CPU::flagCSZP(T val) {
     regs.flags[ZF] = val == 0;
 
     if(isWord) {
-        regs.flags[CF] = tmp_w & 0xff00;
+       
+        if(!isLogicOp) 
+            regs.flags[CF] = tmp_d & 0xffff0000;
+
         regs.flags[SF] = val & 0x8000;
         regs.flags[PF] = parity[val & 0xff];
     }
     else {
-        regs.flags[CF] = tmp_d & 0xffff0000;
+
+        if(!isLogicOp)
+            regs.flags[CF] = tmp_w & 0xff00;
+        
         regs.flags[SF] = val & 0x80;
         regs.flags[PF] = parity[val];
     }
@@ -821,7 +850,7 @@ void CPU::flagCSZP(T val) {
 
 template<typename T>
 void CPU::flagLogic(T val) {
-    flagCSZP<T>(val);
+    flagCSZP<T, true>(val);
     regs.flags[CF] = 0;
     regs.flags[OF] = 0;
 }
@@ -830,8 +859,11 @@ void CPU::flagLogic(T val) {
 void CPU::addEbGb() {       
     mod.decode(memory[IPReal+1]);
     setOperands<false, false>();
-    tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);
-    regs.flags[OF] = ((*lhs_b + *rhs_b) ^ *lhs_b ^ *rhs_b) >> 7;
+    tmp_w = (uword) *lhs_b + (uword) *rhs_b;
+    
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (tmp_w ^ *rhs_b) & 0x80) == 0x80;
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10 ) == 0x10;
+
     *lhs_b += *rhs_b;
     flagCSZP<ubyte>(*lhs_b);
     incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
@@ -842,7 +874,10 @@ void CPU::addEvGv() {
     mod.decode(memory[IPReal+1]);
     setOperands<false, true>();
     tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
-    regs.flags[OF] = ((*lhs_w + *rhs_w) ^ *lhs_w ^ *rhs_w) >> 15;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x80) == 0x80;
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10 ) == 0x10;
+
     *lhs_w += *rhs_w;
     flagCSZP<uword>(*lhs_w);
     incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
@@ -853,7 +888,10 @@ void CPU::addGbEb() {
     mod.decode(memory[IPReal+1]);
     setOperands<true, false>();
     tmp_w = ((uword) *lhs_b) + ((uword) *rhs_b);
-    regs.flags[OF] = ((*lhs_b + *rhs_b) ^ *lhs_b ^ *rhs_b) >> 7;
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (tmp_w ^ *rhs_b) & 0x80) == 0x80;
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10 ) == 0x10;
+
     *lhs_b += *rhs_b;
     flagCSZP<ubyte>(*lhs_b); 
     incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
@@ -864,7 +902,10 @@ void CPU::addGvEv() {
     mod.decode(memory[IPReal+1]);
     setOperands<true, true>();
     tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
-    regs.flags[OF] = ((*lhs_w + *rhs_w) ^ *lhs_w ^ *rhs_w) >> 15;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x80) == 0x80;
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10 ) == 0x10;
+
     *lhs_w += *rhs_w;
     flagCSZP<uword>(*lhs_w); 
     incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
@@ -874,7 +915,10 @@ void CPU::addGvEv() {
 void CPU::addAlIb() {
     uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
     tmp_w = ((uword) regs.al) + ((uword) val);
-    regs.flags[OF] = ((regs.al + val) ^ regs.al ^ val) >> 7;
+
+    regs.flags[OF] = ((tmp_w ^ regs.al) & (tmp_w ^ val) & 0x80) == 0x80;
+    regs.flags[AF] = ((regs.al ^ val ^ tmp_w) & 0x10 ) == 0x10;
+
     regs.al += val;
     flagCSZP<ubyte>(regs.al);
     incIP(2);
@@ -884,9 +928,84 @@ void CPU::addAlIb() {
 void CPU::addAxIv() {
     uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
     tmp_d = ((dword) regs.ax) + ((dword) val);
-    regs.flags[OF] = ((regs.ax + val) ^ regs.ax ^ val) >> 15;
+
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (tmp_d ^ val) & 0x80) == 0x80;
+    regs.flags[AF] = ((regs.ax ^ val ^ tmp_d) & 0x10 ) == 0x10;
+
     regs.ax += val;
     flagCSZP<uword>(regs.ax);
     incIP(3);
 }
+
+// 06
+void CPU::pushEs() {
+    push<uword, 2>(regs.es);
+    incIP(1);
+}
+
+// 07
+void CPU::popEs() {
+    regs.es = pop<uword, 2>();
+    incIP(1);
+}
+
+// 08
+void CPU::orEbGb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, false>();
+    *lhs_b |= *rhs_b;
+    flagLogic<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 09
+void CPU::orEvGv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, true>();
+    *lhs_w |= *rhs_w;
+    flagLogic<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 0A
+void CPU::orGbEb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, false>();
+    *lhs_b |= *rhs_b;
+    flagLogic<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 0B
+void CPU::orGvEv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, true>();
+    *lhs_w |= *rhs_w;
+    flagLogic<ubyte>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 0C
+void CPU::orAlIb() {
+    uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
+    regs.al |= val;
+    flagLogic<ubyte>(regs.al);
+    incIP(2);
+}
+
+// 0D
+void CPU::orAxIv() {
+    uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
+    regs.ax |= val;
+    flagLogic<uword>(regs.ax);
+    incIP(3);
+}
+
+// 0E
+void CPU::pushCs() {
+    push<uword, 2>(regs.cs);
+    incIP(1);
+}
+
+
 

@@ -47,14 +47,21 @@ public:
     uword getOverridedSegmentValue();
     dword getAbsoluteAddressModRM();
 
+    
     uword* getStackTopPtr();
 
 // ****************************** 
 
+    template<typename T, unsigned int>
+    void push(T);
+
+    template<typename T, unsigned int>
+    T pop();
+
     template<bool, bool>
     void setOperands();
     
-    template<typename T>
+    template<typename T, bool isLogicOp = false>
     inline void flagCSZP(T);
 
     template<typename T>
@@ -72,10 +79,17 @@ public:
     inline void addAlIb();      // 0x04
     inline void addAxIv();      // 0x05
 
+    inline void pushEs();       // 0x06
+    inline void popEs();        // 0x07
 
-    
-    inline void addByteFlags();
-    inline void addWordFlags();
+    inline void orEbGb();       // 0x08
+    inline void orEvGv();       // 0x09
+    inline void orGbEb();       // 0x0A
+    inline void orGvEv();       // 0x0B
+    inline void orAlIb();       // 0x0C
+    inline void orAxIv();       // 0x0D
+
+    inline void pushCs();       // 0x0E
 
 // ****************************** 
 
