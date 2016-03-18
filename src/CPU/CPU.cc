@@ -90,17 +90,22 @@ void CPU::execute() {
             assert(false);
         break;
         case 0x10:	//10 ADC Eb Gb 
-
+            adcEbGb();
         break;
         case 0x11:	//11 ADC Ev Gv 
+            adcEvGv();
         break;
         case 0x12:	//12 ADC Gb Eb 
+            adcGbEb();
         break;
         case 0x13:	//13 ADC Gv Ev 
+            adcGvEv();
         break;
         case 0x14:	//14 ADC AL Ib 
+            adcAlIb();
         break;
         case 0x15:	//15 ADC eAX Iv 
+            adcAxIv();
         break;
         case 0x16:	//16 PUSH SS 
         break;
@@ -592,6 +597,8 @@ void CPU::execute() {
         case 0xF8:	//F8 CLC 
         break;
         case 0xF9:	//F9 STC 
+            regs.flags[CF] = true;
+            regs.ip++;
         break;
         case 0xFA:	//FA CLI 
         break;
@@ -855,6 +862,7 @@ void CPU::flagLogic(T val) {
     regs.flags[OF] = 0;
 }
 
+
 // 00
 void CPU::addEbGb() {       
     mod.decode(memory[IPReal+1]);
@@ -1007,5 +1015,87 @@ void CPU::pushCs() {
     incIP(1);
 }
 
+// 10
+void CPU::adcEbGb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, false>();
+    tmp_w = (uword) *lhs_b + (uword) *rhs_b + regs.flags[CF];
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (tmp_w ^ *rhs_b) & 0x80) == 0x80;
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10) == 0x10;
+
+    *lhs_b = *lhs_b + *rhs_b + regs.flags[CF];
+    flagCSZP<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 11
+void CPU::adcEvGv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, true>();
+    tmp_d = *lhs_w + *rhs_w;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10) == 0x10;
+
+    *lhs_w = *lhs_w + *rhs_w + regs.flags[CF];
+    flagCSZP<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 12
+void CPU::adcGbEb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, false>();
+    tmp_w = *lhs_b + *rhs_b;
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (tmp_w ^ *rhs_b) & 0x80) == 0x80;
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10) == 0x10;
+
+    *lhs_b = *lhs_b + *rhs_b + regs.flags[CF];
+    flagCSZP<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 13
+void CPU::adcGvEv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, true>();
+    tmp_d = *lhs_w + *rhs_w;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10) == 0x10;
+
+    *lhs_w = *lhs_w + *rhs_w + regs.flags[CF];
+    flagCSZP<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+
+}
+
+// 14
+void CPU::adcAlIb() {
+    uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
+    tmp_w = regs.al + val + regs.flags[CF];
+
+    regs.flags[OF] = ((tmp_w ^ regs.al) & (tmp_w ^ val) & 0x80) == 0x80;
+    regs.flags[AF] = ((regs.al ^ val ^ tmp_w) & 0x10) == 0x10;
+
+    regs.al = regs.al + val + regs.flags[CF];
+    flagCSZP<ubyte>(regs.al);
+    incIP(2);
+}
+
+// 15
+void CPU::adcAxIv() {
+    uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
+    tmp_d = regs.ax + val + regs.flags[CF];
+
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (tmp_d ^ val) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.ax ^ val ^ tmp_d) & 0x10) == 0x10;
+
+    regs.ax = regs.ax + val + regs.flags[CF];
+    flagCSZP<uword>(regs.ax);
+    incIP(3);
+}
 
 

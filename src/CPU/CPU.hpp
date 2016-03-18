@@ -91,6 +91,13 @@ public:
 
     inline void pushCs();       // 0x0E
 
+    inline void adcEbGb();      // 0x10
+    inline void adcEvGv();      // 0x11
+    inline void adcGbEb();      // 0x12
+    inline void adcGvEv();      // 0x13
+    inline void adcAlIb();      // 0x14
+    inline void adcAxIv();      // 0x15
+
 // ****************************** 
 
     /* Lookups */
