@@ -568,7 +568,7 @@ void CPU::execute() {
         case 0xEA:	//EA JMP Ap 
         break;
         case 0xEB:	//EB JMP Jb 
-            //regs.ip = (uword) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+            regs.ip = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
         break;
         case 0xEC:	//EC IN AL DX 
         break;
@@ -655,9 +655,10 @@ dword CPU::getAbsoluteAddressModRM() {
     
     uword absAddr = 0;
 
-    if(mod.mode == NO_DISPLACEMENT && mod.rm == UWORD)
+    if(mod.mode == NO_DISPLACEMENT && mod.rm == UWORD) 
         return getAbs(getOverridedSegmentValue(), memory.getRawData<uword, 3, 2>(IPReal));
 
+    
     switch(mod.rm.to_ulong()) {
         
         case BX_SI:

@@ -169,7 +169,66 @@ BOOST_AUTO_TEST_CASE( getAbsAddrSegments0 ) {
 
 BOOST_AUTO_TEST_CASE( setOperands0 ) {
 
+    uint32_t absAddr = 0;
+
     CPU cpu;
+    Memory *mem = cpu.getMemory();
+    ubyte code[] = {
+        0x89, 0x1e, 0xde, 0xfa,       // mov ds:0xfade, ax        
+        0x36, 0x89, 0x16, 0xac, 0x03, // mov ss:0x3ac, dx 
+        0x26, 0x89, 0x0f,             // mov es:[bx], cx
+        0x26, 0x89, 0x10,             // mov es:[bx+si], dx
+        0x26, 0x88, 0x14,             // mov es:[si], dl
+
+    }; 
+    memcpy(MEM(mem), code, sizeof(code) );
+
+    cpu.mod.decode(0x1e);
+    cpu.setOperands<false, true>();
+
+    absAddr = 0xfade;
+    BOOST_REQUIRE_EQUAL( cpu.lhs_w, (uword*) &cpu.memory[absAddr] );
+    BOOST_REQUIRE_EQUAL( cpu.rhs_w, &cpu.regs.bx );
+
+    cpu.regs.ip += 5;
+    cpu.IPReal += 5;
+
+    cpu.regs.ss = 0x1234;
+    cpu.ovrd.regOverride = SS_OVR;
+    cpu.mod.decode(0x16);
+    cpu.setOperands<false, true>();
+
+    absAddr = (0x1234 << 4) + 0x3ac;
+    BOOST_REQUIRE_EQUAL( cpu.lhs_w, (uword*) &cpu.memory[absAddr] );
+    BOOST_REQUIRE_EQUAL( cpu.rhs_w, &cpu.regs.dx );
+
+    cpu.regs.ip += 6;
+    cpu.IPReal += 6;
+
+    cpu.regs.es = 0x4321;
+    cpu.regs.bx = 0x1234;
+    cpu.ovrd.regOverride = ES_OVR;
+    cpu.mod.decode(0xf);
+    cpu.setOperands<false, true>();
+
+    absAddr = (0x4321<<4) + 0x1234;
+    BOOST_REQUIRE_EQUAL( cpu.lhs_w, (uword*) &cpu.memory[absAddr] );
+    BOOST_REQUIRE_EQUAL( cpu.rhs_w, &cpu.regs.cx );
+
+    cpu.regs.ip += 4;
+    cpu.IPReal += 4;
+
+    cpu.regs.es = 0x031c;
+    cpu.regs.bx = 0x1234;
+    cpu.regs.si = 0x2345;
+    cpu.ovrd.regOverride = ES_OVR;
+    cpu.mod.decode(0x10);
+    cpu.setOperands<false, true>();
+
+    absAddr = (0x31c<<4) + (0x1234 + 0x2345);
+    BOOST_REQUIRE_EQUAL( cpu.lhs_w, (uword*) &cpu.memory[absAddr] );
+    BOOST_REQUIRE_EQUAL( cpu.rhs_w, &cpu.regs.dx );
+
 
 }
 

@@ -53,10 +53,10 @@ public:
 // ****************************** 
 
     template<typename T, unsigned int>
-    void push(T);
+    inline void push(T);
 
     template<typename T, unsigned int>
-    T pop();
+    inline T pop();
 
     template<bool, bool>
     void setOperands();
