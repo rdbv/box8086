@@ -21,7 +21,6 @@ public:
 
 //private:
 
-// ****************************** 
 
     dword IPReal = 0;
 
@@ -38,7 +37,6 @@ public:
     uword  lhs_buf_w, rhs_buf_w;
     dword  tmp_d;
    
-// ****************************** 
 
     void fetch();
     void execute();
@@ -50,7 +48,6 @@ public:
     
     uword* getStackTopPtr();
 
-// ****************************** 
 
     template<typename T, unsigned int>
     inline void push(T);
@@ -61,7 +58,7 @@ public:
     template<bool, bool>
     void setOperands();
     
-    template<typename T, bool isLogicOp = false>
+    template<typename T, bool withCarry = true, bool isLogicOp = false>
     inline void flagCSZP(T);
 
     template<typename T>
@@ -97,6 +94,44 @@ public:
     inline void adcGvEv();      // 0x13
     inline void adcAlIb();      // 0x14
     inline void adcAxIv();      // 0x15
+
+    inline void pushSs();       // 0x16
+    inline void popSs();        // 0x17
+
+    inline void sbbEbGb();      // 0x18
+    inline void sbbEvGv();      // 0x19
+    inline void sbbGbEb();      // 0x1A
+    inline void sbbGvEv();      // 0x1B
+    inline void sbbAlIb();      // 0x1C
+    inline void sbbAxIv();      // 0x1D
+
+    inline void pushDs();       // 0x1E
+    inline void popDs();        // 0x1F
+    
+    inline void andEbGb();      // 0x20 
+    inline void andEvGv();      // 0x21
+    inline void andGbEb();      // 0x22
+    inline void andGvEv();      // 0x23
+    inline void andAlIb();      // 0x24
+    inline void andAxIv();      // 0x25
+
+    inline void daa();          // 0x27
+
+    inline void subEbGb();      // 0x28
+    inline void subEvGv();      // 0x29
+    inline void subGbEb();      // 0x2A
+    inline void subGvEv();      // 0x2B
+    inline void subAlIb();      // 0x2C
+    inline void subAxIv();      // 0x2D
+
+    inline void das();          // 0x2F
+
+    inline void xorEbGb();      // 0x30
+    inline void xorEvGv();      // 0x31
+    inline void xorGbEb();      // 0x32
+    inline void xorGvEv();      // 0x33
+    inline void xorAlIb();      // 0x34
+    inline void xorAxIv();      // 0x35
 
 // ****************************** 
 

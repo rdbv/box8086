@@ -108,72 +108,106 @@ void CPU::execute() {
             adcAxIv();
         break;
         case 0x16:	//16 PUSH SS 
+            pushSs();
         break;
         case 0x17:	//17 POP SS 
+            popSs();
         break;
         case 0x18:	//18 SBB Eb Gb 
+            sbbEbGb();
         break;
         case 0x19:	//19 SBB Ev Gv 
+            sbbEvGv();  
         break;
         case 0x1A:	//1A SBB Gb Eb 
+            sbbGbEb();
         break;
         case 0x1B:	//1B SBB Gv Ev 
+            sbbGvEv();
         break;
         case 0x1C:	//1C SBB AL Ib 
+            sbbAlIb();
         break;
         case 0x1D:	//1D SBB eAX Iv 
+            sbbAxIv();
         break;
         case 0x1E:	//1E PUSH DS 
+            pushDs();
         break;
         case 0x1F:	//1F POP DS 
+            popDs();
         break;
         case 0x20:	//20 AND Eb Gb 
+            andEbGb();
         break;
         case 0x21:	//21 AND Ev Gv 
+            andEvGv();
         break;
         case 0x22:	//22 AND Gb Eb 
+            andGbEb();
         break;
         case 0x23:	//23 AND Gv Ev 
+            andGvEv();
         break;
         case 0x24:	//24 AND AL Ib 
+            andAlIb();
         break;
         case 0x25:	//25 AND eAX Iv 
+            andAxIv();
         break;
         case 0x26:	//26 ES: 
+            assert(false);
         break;
         case 0x27:	//27 DAA 
+            daa();
         break;
         case 0x28:	//28 SUB Eb Gb 
+            subEbGb();
         break;
         case 0x29:	//29 SUB Ev Gv 
+            subEvGv();
         break;
         case 0x2A:	//2A SUB Gb Eb 
+            subGbEb();
         break;
         case 0x2B:	//2B SUB Gv Ev 
+            subGvEv();
         break;
         case 0x2C:	//2C SUB AL Ib 
+            subAlIb();
         break;
         case 0x2D:	//2D SUB eAX Iv 
+            subAxIv();
         break;
         case 0x2E:	//2E CS: 
+            assert(false);
         break;
         case 0x2F:	//2F DAS 
+            das();
         break;
         case 0x30:	//30 XOR Eb Gb 
+            xorEbGb(); 
         break;
         case 0x31:	//31 XOR Ev Gv 
+            xorEvGv();
         break;
         case 0x32:	//32 XOR Gb Eb 
+            xorGbEb();
         break;
         case 0x33:	//33 XOR Gv Ev 
+            xorGvEv();
         break;
         case 0x34:	//34 XOR AL Ib 
+            xorAlIb();
         break;
         case 0x35:	//35 XOR eAX Iv 
+            xorAxIv();
         break;
         case 0x36:	//36 SS: 
+            assert(false);
         break;
         case 0x37:	//37 AAA 
+
         break;
         case 0x38:	//38 CMP Eb Gb 
         break;
@@ -827,7 +861,7 @@ T CPU::pop() {
 
 /* Set carry, sign, zero, parity flags */
 
-template<typename T, bool isLogicOp>
+template<typename T, bool withCarry, bool isLogicOp>
 void CPU::flagCSZP(T val) {
 
     const bool isWord = std::is_same<T, sword>() || std::is_same<T, uword>();
@@ -835,18 +869,22 @@ void CPU::flagCSZP(T val) {
     regs.flags[ZF] = val == 0;
 
     if(isWord) {
-       
-        if(!isLogicOp) 
-            regs.flags[CF] = tmp_d & 0xffff0000;
+      
+        if(withCarry) {
+            if(!isLogicOp) 
+                regs.flags[CF] = tmp_d & 0xffff0000;
+        }
 
         regs.flags[SF] = val & 0x8000;
         regs.flags[PF] = parity[val & 0xff];
     }
     else {
-
-        if(!isLogicOp)
-            regs.flags[CF] = tmp_w & 0xff00;
         
+        if(withCarry) {
+            if(!isLogicOp)
+                regs.flags[CF] = tmp_w & 0xff00;
+        } 
+
         regs.flags[SF] = val & 0x80;
         regs.flags[PF] = parity[val];
     }
@@ -1098,5 +1136,350 @@ void CPU::adcAxIv() {
     flagCSZP<uword>(regs.ax);
     incIP(3);
 }
+
+// 16
+void CPU::pushSs() {
+    push<uword, 2>(regs.ss);
+}
+
+// 17
+void CPU::popSs() {
+    regs.ss = pop<uword, 2>();
+}
+
+// 18
+
+void CPU::sbbEbGb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, false>();
+    tmp_w = *lhs_b - (*rhs_b + regs.flags[CF]);
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (*lhs_b ^ *rhs_b) & 0x80);
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10);
+
+    *lhs_b = *lhs_b - (*rhs_b + regs.flags[CF]);
+    flagCSZP<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 19
+void CPU::sbbEvGv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, true>();
+    tmp_d = *lhs_w - (*rhs_w + regs.flags[CF]);
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (*lhs_w ^ *rhs_w) & 0x8000);
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10);
+
+    *lhs_w = *lhs_w - (*rhs_w + regs.flags[CF]);
+    flagCSZP<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 1A
+void CPU::sbbGbEb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, false>();
+    tmp_w = *lhs_b - (*rhs_b + regs.flags[CF]);
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (*lhs_b ^ *rhs_b) & 0x80);
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10);
+
+    *lhs_b = *lhs_b - (*rhs_b + regs.flags[CF]);
+    flagCSZP<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 1B
+void CPU::sbbGvEv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, true>();
+    tmp_d = *lhs_w - (*rhs_w + regs.flags[CF]);
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (*lhs_w ^ *rhs_w) & 0x8000);
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10);
+
+    *lhs_w = *lhs_w - (*rhs_w + regs.flags[CF]);
+    flagCSZP<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 1C
+void CPU::sbbAlIb() {
+    uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
+    tmp_w = regs.al - ( val + regs.flags[CF] );
+
+    regs.flags[OF] = ((tmp_w ^ regs.al) & (regs.al ^ val) & 0x80);
+    regs.flags[AF] = ((regs.al ^ val ^ tmp_w) & 0x10);
+   
+    regs.al = regs.al - ( val + regs.flags[CF] );
+    flagCSZP<ubyte>(regs.al);
+    incIP(2);
+}
+
+// 1D
+void CPU::sbbAxIv() {
+    uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
+    tmp_d = regs.ax - ( val + regs.flags[CF] );
+
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (regs.ax ^ val) & 0x80);
+    regs.flags[AF] = ((regs.ax ^ val ^ tmp_d) & 0x10);
+
+    regs.ax = regs.ax - ( val + regs.flags[CF] );
+    flagCSZP<uword>(regs.ax);
+    incIP(3);
+}
+
+// 1E
+void CPU::pushDs() {
+    push<uword, 2>(regs.ds);
+}
+
+// 1F
+void CPU::popDs() {
+    regs.ds = pop<uword, 2>();
+}
+
+// 20
+void CPU::andEbGb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, false>();
+    tmp_w = *lhs_b & *rhs_b;
+
+    *lhs_b &= *rhs_b;
+    flagLogic<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 21
+void CPU::andEvGv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, true>();
+    tmp_d = *lhs_w & *rhs_w;
+
+    *lhs_w &= *rhs_w;
+    flagLogic<ubyte>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 22
+void CPU::andGbEb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, false>();
+    tmp_w = *lhs_b & *rhs_b;
+
+    *lhs_b &= *rhs_b;
+    flagLogic<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 23
+void CPU::andGvEv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, true>();
+    tmp_d = *lhs_w & *rhs_w;
+
+    *lhs_w &= *rhs_w;
+    flagLogic<ubyte>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 24
+void CPU::andAlIb() {
+    uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
+    tmp_w = regs.al & val;
+
+    regs.al &= val;
+    flagLogic<ubyte>(regs.al);
+    incIP(2);
+}
+
+// 25
+void CPU::andAxIv() {
+    uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
+    tmp_d = regs.ax & val;
+
+    regs.ax &= val;
+    flagLogic<ubyte>(regs.ax);
+    incIP(3);
+}
+
+// 27
+void CPU::daa() {
+    if( ((regs.al & 0xf) > 9) || regs.flags[AF] ) {
+        tmp_w = (regs.al + 6);
+        regs.al = tmp_w & 255;
+        regs.flags[CF] = tmp_w & 0xFF00;
+        regs.flags[AF] = true;
+    }
+
+    if( (regs.al > 0x9f) || regs.flags[CF] ) {
+        regs.al += 0x60;
+        regs.flags[CF] = true;
+    }
+
+    regs.al &= 255;
+    flagCSZP<ubyte, false>(regs.al);
+    incIP(1); 
+}
+
+// 28
+void CPU::subEbGb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, false>();
+    tmp_w = *lhs_b - *rhs_b;
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (*lhs_b ^ *rhs_b) & 0x80);
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10);
+
+    *lhs_b -= *rhs_b;
+    flagCSZP<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 29
+void CPU::subEvGv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, true>();
+    tmp_d = *lhs_w - *rhs_w;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (*lhs_w ^ *rhs_w) & 0x8000);
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10);
+
+    *lhs_w -= *rhs_w;
+    flagCSZP<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 2A
+void CPU::subGbEb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, false>();
+    tmp_w = *lhs_b - *rhs_b;
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (*lhs_b ^ *rhs_b) & 0x80);
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10);
+
+    *lhs_b -= *rhs_b;
+    flagCSZP<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 2B
+void CPU::subGvEv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, true>();
+    tmp_d = *lhs_w - *rhs_w;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (*lhs_w ^ *rhs_w) & 0x8000);
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10);
+
+    *lhs_w -= *rhs_w;
+    flagCSZP<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+
+// 2C
+void CPU::subAlIb() {
+    uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
+    tmp_w = regs.al - val;
+
+    regs.flags[OF] = ((tmp_w ^ regs.al) & (regs.al ^ val) & 0x80);
+    regs.flags[AF] = ((regs.al ^ val ^ tmp_w) & 0x10);
+
+    regs.al -= val;
+    flagCSZP<ubyte>(regs.al);
+    incIP(2);
+}
+
+// 2D
+void CPU::subAxIv() {
+    uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
+    tmp_d = regs.ax - val;
+
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (regs.ax ^ val) & 0x8000);
+    regs.flags[AF] = ((regs.ax ^ val ^ tmp_d) & 0x10);
+
+    regs.ax -= val;
+    flagCSZP<uword>(regs.ax);
+    incIP(3);
+}
+
+// 2F
+void CPU::das() {
+    if( ((regs.al & 15) > 9) || regs.flags[AF] ) {
+         tmp_w = regs.al - 6;
+         regs.al = tmp_w & 255;
+         regs.flags[CF] = tmp_w & 0xff00;
+         regs.flags[AF] = true;
+    }
+    else 
+        regs.flags[AF] = true;
+
+    if( ((regs.al & 0xf0) > 0x90) || regs.flags[CF] ) {
+        regs.al -= 0x60;
+        regs.flags[CF] = true;
+    }
+    else
+        regs.flags[CF] = false;
+
+    flagCSZP<ubyte, false>(regs.al);
+    incIP(1);
+}
+
+
+// 30
+void CPU::xorEbGb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, false>();
+    *lhs_b ^= *rhs_b;
+    flagLogic<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 31
+void CPU::xorEvGv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, true>();
+    *lhs_w ^= *rhs_w;
+    flagLogic<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 32
+void CPU::xorGbEb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, false>();
+    *lhs_b ^= *rhs_b;
+    flagLogic<ubyte>(*lhs_b);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 33
+void CPU::xorGvEv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, true>();
+    *lhs_w ^= *rhs_w;
+    flagLogic<uword>(*lhs_w);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 34
+void CPU::xorAlIb() {
+    uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
+    regs.al ^= val;
+    flagLogic<ubyte>(regs.al);
+    incIP(2);
+}
+
+// 35
+void CPU::xorAxIv() {
+    uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
+    regs.ax ^= val;
+    flagLogic<uword>(regs.ax);
+    incIP(3);
+}
+
 
 
