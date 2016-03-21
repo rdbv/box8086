@@ -207,21 +207,28 @@ void CPU::execute() {
             assert(false);
         break;
         case 0x37:	//37 AAA 
-
+            aaa();
         break;
         case 0x38:	//38 CMP Eb Gb 
+            cmpEbGb();
         break;
         case 0x39:	//39 CMP Ev Gv 
+            cmpEvGv();
         break;
         case 0x3A:	//3A CMP Gb Eb 
+            cmpGbEb();
         break;
         case 0x3B:	//3B CMP Gv Ev 
+            cmpGvEv();
         break;
         case 0x3C:	//3C CMP AL Ib 
+            cmpAlIb();
         break;
         case 0x3D:	//3D CMP eAX Iv 
+            cmpAxIv();
         break;
         case 0x3E:	//3E DS: 
+            assert(false);
         break;
         case 0x3F:	//3F AAS 
         break;
@@ -1481,5 +1488,99 @@ void CPU::xorAxIv() {
     incIP(3);
 }
 
+// 37
+void CPU::aaa() {
+    if( ((regs.al & 0xf) > 9) || regs.flags[AF] ) {
+        regs.al += 6;
+        regs.ah += 1;
+        regs.flags[AF] = regs.flags[CF] = true;
+    }
+    else 
+        regs.flags[AF] = regs.flags[CF] = false; 
+    regs.al = regs.al & 0xf;
+}
+
+// 38
+void CPU::cmpEbGb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, false>();
+    tmp_w = *lhs_b - *rhs_b;
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (*lhs_b ^ *rhs_b) & 0x80);
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10);
+
+    uint8_t tmp = *lhs_b - *rhs_b;
+    flagCSZP<ubyte>(tmp);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 39
+void CPU::cmpEvGv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<false, true>();
+    tmp_d = *lhs_w - *rhs_w;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (*lhs_w ^ *rhs_w) & 0x8000);
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10);
+
+    uint16_t tmp = *lhs_w - *rhs_w;
+    flagCSZP<uword>(tmp);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 3A
+void CPU::cmpGbEb() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, false>();
+    tmp_w = *lhs_b - *rhs_b;
+
+    regs.flags[OF] = ((tmp_w ^ *lhs_b) & (*lhs_b ^ *rhs_b) & 0x80);
+    regs.flags[AF] = ((*lhs_b ^ *rhs_b ^ tmp_w) & 0x10);
+
+    uint8_t tmp = *lhs_b - *rhs_b;
+    flagCSZP<ubyte>(tmp);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+
+// 3B 
+void CPU::cmpGvEv() {
+    mod.decode(memory[IPReal+1]);
+    setOperands<true, true>();
+    tmp_d = *lhs_w - *rhs_w;
+
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (*lhs_w ^ *rhs_w) & 0x8000);
+    regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10);
+
+    uint16_t tmp = *lhs_w - *rhs_w;
+    flagCSZP<uword>(tmp);
+    incIP(mod.getModInstrSize(ovrd.getOverrideCount()));
+}
+
+// 3C
+void CPU::cmpAlIb() {
+    uint8_t val = memory.getRawData<ubyte, 1, 0>(IPReal);
+    tmp_w = regs.al - val;
+
+    regs.flags[OF] = ((tmp_w ^ regs.al) & (regs.al ^ val) & 0x80);
+    regs.flags[AF] = ((regs.al ^ val ^ tmp_w) & 0x10);
+
+    uint8_t tmp = regs.al - val;
+    flagCSZP<ubyte>(tmp);
+    incIP(2);
+}
+
+// 3D
+void CPU::cmpAxIv() {
+    uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
+    tmp_d = regs.ax - val;
+
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (regs.ax ^ val) & 0x8000);
+    regs.flags[AF] = ((regs.ax ^ val ^ tmp_d) & 0x10);
+
+    uint16_t tmp = regs.ax - val;
+    flagCSZP<uword>(tmp);
+    incIP(3); 
+}
 
 

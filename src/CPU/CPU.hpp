@@ -133,6 +133,15 @@ public:
     inline void xorAlIb();      // 0x34
     inline void xorAxIv();      // 0x35
 
+    inline void aaa();          // 0x37
+    
+    inline void cmpEbGb();      // 0x38
+    inline void cmpEvGv();      // 0x39
+    inline void cmpGbEb();      // 0x3A
+    inline void cmpGvEv();      // 0x3B
+    inline void cmpAlIb();      // 0x3C
+    inline void cmpAxIv();      // 0x3D
+
 // ****************************** 
 
     /* Lookups */
