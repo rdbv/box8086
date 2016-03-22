@@ -1,13 +1,10 @@
 cpu 8086
 org 0x7c00
 
-mov [0xfade], bx
-mov [ss:0x03ac], dx
-
-mov [es:bx], cx
-mov [es:bx+si], dx
-mov byte [es:si], dl
-
+mov ax, 0x23
+hr:
+dec ax
+jmp hr
 
 times 510 - ($-$$) db 0
 dw 0xAA55

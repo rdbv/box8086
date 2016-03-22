@@ -231,134 +231,198 @@ void CPU::execute() {
             assert(false);
         break;
         case 0x3F:	//3F AAS 
+            aas();
         break;
         case 0x40:	//40 INC eAX 
+            incAx();
         break;
         case 0x41:	//41 INC eCX 
+            incCx();
         break;
         case 0x42:	//42 INC eDX 
+            incDx();
         break;
         case 0x43:	//43 INC eBX 
+            incBx();
         break;
         case 0x44:	//44 INC eSP 
+            incSp();
         break;
         case 0x45:	//45 INC eBP 
+            incBp();    
         break;
         case 0x46:	//46 INC eSI 
+            incSi();
         break;
         case 0x47:	//47 INC eDI 
+            incDi();
         break;
         case 0x48:	//48 DEC eAX 
+            decAx();
         break;
         case 0x49:	//49 DEC eCX 
+            decCx(); 
         break;
         case 0x4A:	//4A DEC eDX 
+            decDx();
         break;
         case 0x4B:	//4B DEC eBX 
+            decBx();
         break;
         case 0x4C:	//4C DEC eSP 
+            decSp();
         break;
         case 0x4D:	//4D DEC eBP 
+            decBp();
         break;
         case 0x4E:	//4E DEC eSI 
+            decSi();
         break;
         case 0x4F:	//4F DEC eDI 
+            decDi();
         break;
         case 0x50:	//50 PUSH eAX 
+            pushAx();
         break;
         case 0x51:	//51 PUSH eCX 
+            pushCx();
         break;
         case 0x52:	//52 PUSH eDX 
+            pushDx();
         break;
         case 0x53:	//53 PUSH eBX 
+            pushBx();
         break;
         case 0x54:	//54 PUSH eSP 
+            pushSp();
         break;
         case 0x55:	//55 PUSH eBP 
+            pushBp();
         break;
         case 0x56:	//56 PUSH eSI 
+            pushSi();
         break;
         case 0x57:	//57 PUSH eDI 
+            pushDi();
         break;
         case 0x58:	//58 POP eAX 
+            popAx();
         break;
         case 0x59:	//59 POP eCX 
+            popCx();
         break;
         case 0x5A:	//5A POP eDX 
+            popDx();
         break;
         case 0x5B:	//5B POP eBX 
+            popBx();
         break;
         case 0x5C:	//5C POP eSP 
+            popSp();
         break;
         case 0x5D:	//5D POP eBP 
+            popBp();
         break;
         case 0x5E:	//5E POP eSI 
+            popSi();
         break;
         case 0x5F:	//5F POP eDI 
+            popDi();
         break;
         case 0x60:	//60 -- 
+            assert(false);
         break;
         case 0x61:	//61 -- 
+            assert(false);
         break;
         case 0x62:	//62 -- 
+            assert(false);
         break;
         case 0x63:	//63 -- 
+            assert(false);
         break;
         case 0x64:	//64 -- 
+            assert(false);
         break;
         case 0x65:	//65 -- 
+            assert(false);
         break;
         case 0x66:	//66 -- 
+            assert(false);
         break;
         case 0x67:	//67 -- 
+            assert(false);
         break;
         case 0x68:	//68 -- 
+            assert(false);
         break;
         case 0x69:	//69 -- 
+            assert(false);
         break;
         case 0x6A:	//6A -- 
+            assert(false);
         break;
         case 0x6B:	//6B -- 
+            assert(false);
         break;
         case 0x6C:	//6C -- 
+            assert(false);
         break;
         case 0x6D:	//6D -- 
+            assert(false);
         break;
         case 0x6E:	//6E -- 
+            assert(false);
         break;
         case 0x6F:	//6F -- 
         break;
         case 0x70:	//70 JO Jb 
+            jo();
         break;
         case 0x71:	//71 JNO Jb 
+            jno();
         break;
         case 0x72:	//72 JB Jb 
+            jb();
         break;
         case 0x73:	//73 JNB Jb 
+            jnb();
         break;
         case 0x74:	//74 JZ Jb 
+            jz();
         break;
         case 0x75:	//75 JNZ Jb 
+            jnz();
         break;
         case 0x76:	//76 JBE Jb 
+            jbe();
         break;
         case 0x77:	//77 JA Jb 
+            ja();
         break;
         case 0x78:	//78 JS Jb 
+            js();
         break;
         case 0x79:	//79 JNS Jb 
+            jns();
         break;
         case 0x7A:	//7A JPE Jb 
+            jpe();
         break;
         case 0x7B:	//7B JPO Jb 
+            jpo();
         break;
         case 0x7C:	//7C JL Jb 
+            jl();
         break;
         case 0x7D:	//7D JGE Jb 
+            jge();
         break;
         case 0x7E:	//7E JLE Jb 
+            jle();
         break;
         case 0x7F:	//7F JG Jb 
+            jg();
         break;
         case 0x80:	//80 GRP1 Eb Ib 
         break;
@@ -696,10 +760,11 @@ dword CPU::getAbsoluteAddressModRM() {
     
     uword absAddr = 0;
 
+    /* Raw coded address */
     if(mod.mode == NO_DISPLACEMENT && mod.rm == UWORD) 
         return getAbs(getOverridedSegmentValue(), memory.getRawData<uword, 3, 2>(IPReal));
 
-    
+
     switch(mod.rm.to_ulong()) {
         
         case BX_SI:
@@ -762,14 +827,10 @@ void CPU::setOperands() {
             if(isWord) {
                 lhs_w = wordRegs[mod.rm.to_ulong()];
                 rhs_w = wordRegs[mod.reg.to_ulong()];
-                lhs_buf_w = *lhs_w;
-                rhs_buf_w = *rhs_w;
             }
             else {
                 lhs_b = byteRegs[mod.rm.to_ulong()];
                 rhs_b = byteRegs[mod.reg.to_ulong()];
-                lhs_buf_b = *lhs_b;
-                rhs_buf_b = *rhs_b;
             }
         }
         
@@ -778,14 +839,10 @@ void CPU::setOperands() {
             if(isWord) {
                 lhs_w = wordRegs[mod.reg.to_ulong()];
                 rhs_w = wordRegs[mod.rm.to_ulong()];
-                lhs_buf_w = *lhs_w;
-                rhs_buf_w = *rhs_w;
             }
             else {
                 lhs_b = byteRegs[mod.reg.to_ulong()];
                 rhs_b = byteRegs[mod.rm.to_ulong()];
-                lhs_buf_b = *lhs_b;
-                rhs_buf_b = *rhs_b;
             }
         }
         
@@ -797,31 +854,21 @@ void CPU::setOperands() {
         if(isWord) {
             lhs_w = wordRegs[mod.reg.to_ulong()];
             rhs_w = (uword*) &memory[getAbsoluteAddressModRM()]; 
-            lhs_buf_w = *lhs_w;
-            rhs_buf_w = *rhs_w;
         }
         else {
             lhs_b = byteRegs[mod.reg.to_ulong()];
             rhs_b = &memory[getAbsoluteAddressModRM()];
-            lhs_buf_b = *lhs_b;
-            rhs_buf_b = *rhs_b;
         }
         return;
     }
-
-
     else {
         if(isWord) {
             lhs_w = (uword*) &memory[getAbsoluteAddressModRM()];
             rhs_w = wordRegs[mod.reg.to_ulong()];
-            lhs_buf_w = *lhs_w;
-            rhs_buf_w = *rhs_w;
         }
         else {
             lhs_b = &memory[getAbsoluteAddressModRM()];
             rhs_b = byteRegs[mod.reg.to_ulong()];
-            lhs_buf_b = *lhs_b;
-            rhs_buf_b = *rhs_b;
         }
         return;
     }
@@ -850,25 +897,21 @@ dword CPU::getAbs(uword seg, uword off) {
 
 template<typename T, unsigned int size>
 void CPU::push(T val) {
-
     regs.sp -= size;
     T* topPtr = (T*) &memory[getAbs(regs.ss, regs.sp)];
     *topPtr = val;
-
 }
 
 template<typename T, unsigned int size>
 T CPU::pop() {
-
     T val = *((T*) &memory[getAbs(regs.ss, regs.sp)]);
     regs.sp += size;
     return val;
-
 }
 
 /* Set carry, sign, zero, parity flags */
 
-template<typename T, bool withCarry, bool isLogicOp>
+template<typename T, bool withCarry>
 void CPU::flagCSZP(T val) {
 
     const bool isWord = std::is_same<T, sword>() || std::is_same<T, uword>();
@@ -878,8 +921,7 @@ void CPU::flagCSZP(T val) {
     if(isWord) {
       
         if(withCarry) {
-            if(!isLogicOp) 
-                regs.flags[CF] = tmp_d & 0xffff0000;
+            regs.flags[CF] = tmp_d & 0xffff0000;
         }
 
         regs.flags[SF] = val & 0x8000;
@@ -888,8 +930,7 @@ void CPU::flagCSZP(T val) {
     else {
         
         if(withCarry) {
-            if(!isLogicOp)
-                regs.flags[CF] = tmp_w & 0xff00;
+            regs.flags[CF] = tmp_w & 0xff00;
         } 
 
         regs.flags[SF] = val & 0x80;
@@ -903,7 +944,7 @@ void CPU::flagCSZP(T val) {
 
 template<typename T>
 void CPU::flagLogic(T val) {
-    flagCSZP<T, true>(val);
+    flagCSZP<T, false>(val);
     regs.flags[CF] = 0;
     regs.flags[OF] = 0;
 }
@@ -929,7 +970,7 @@ void CPU::addEvGv() {
     setOperands<false, true>();
     tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
 
-    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x80) == 0x80;
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x8000) == 0x8000;
     regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10 ) == 0x10;
 
     *lhs_w += *rhs_w;
@@ -957,7 +998,7 @@ void CPU::addGvEv() {
     setOperands<true, true>();
     tmp_d = ((dword) *lhs_w) + ((dword) *rhs_w);
 
-    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x80) == 0x80;
+    regs.flags[OF] = ((tmp_d ^ *lhs_w) & (tmp_d ^ *rhs_w) & 0x8000) == 0x8000;
     regs.flags[AF] = ((*lhs_w ^ *rhs_w ^ tmp_d) & 0x10 ) == 0x10;
 
     *lhs_w += *rhs_w;
@@ -983,7 +1024,7 @@ void CPU::addAxIv() {
     uint16_t val = memory.getRawData<uword, 2, 1>(IPReal);
     tmp_d = ((dword) regs.ax) + ((dword) val);
 
-    regs.flags[OF] = ((tmp_d ^ regs.ax) & (tmp_d ^ val) & 0x80) == 0x80;
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (tmp_d ^ val) & 0x8000) == 0x8000;
     regs.flags[AF] = ((regs.ax ^ val ^ tmp_d) & 0x10 ) == 0x10;
 
     regs.ax += val;
@@ -1498,6 +1539,7 @@ void CPU::aaa() {
     else 
         regs.flags[AF] = regs.flags[CF] = false; 
     regs.al = regs.al & 0xf;
+    incIP(1);
 }
 
 // 38
@@ -1583,4 +1625,407 @@ void CPU::cmpAxIv() {
     incIP(3); 
 }
 
+void CPU::aas() {
+    if(((regs.al & 0xf) > 9) || regs.flags[AF]) {
+        regs.al -= 6;
+        regs.ah -= 1;
+        regs.flags[AF] = regs.flags[CF] = true;
+    }
+    else 
+        regs.flags[AF] = regs.flags[CF] = false; 
+    regs.al = regs.al & 0xf;
+    incIP(1);
+}
+
+// 40
+void CPU::incAx() {
+    tmp_d = regs.ax + 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.ax ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.ax += 1;
+    flagCSZP<uword, false>(regs.ax);
+    incIP(1);
+
+}
+
+// 41
+void CPU::incCx() {
+    tmp_d = regs.cx + 1;
+    
+    regs.flags[OF] = ((tmp_d ^ regs.cx) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.cx ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.cx += 1;
+    flagCSZP<uword, false>(regs.cx);
+    incIP(1);
+}
+
+// 42
+void CPU::incDx() {
+    tmp_d = regs.dx + 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.dx) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.dx ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.dx += 1;
+    flagCSZP<uword, false>(regs.dx);
+    incIP(1);
+}
+
+// 43
+void CPU::incBx() {
+    tmp_d = regs.bx + 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.bx) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.bx ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.bx += 1;
+    flagCSZP<uword, false>(regs.bx);
+    incIP(1);
+}
+
+// 44
+void CPU::incSp() {
+    tmp_d = regs.sp + 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.sp) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.sp ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.sp += 1;
+    flagCSZP<uword, false>(regs.sp);
+    incIP(1);
+}
+
+// 45
+void CPU::incBp() {
+    tmp_d = regs.bp + 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.bp) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.bp ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.bp += 1;
+    flagCSZP<uword, false>(regs.bp);
+    incIP(1);
+}
+
+// 46
+void CPU::incSi() {
+    tmp_d = regs.si + 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.si) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.si ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.si += 1;
+    flagCSZP<uword, false>(regs.si);
+    incIP(1);
+}
+
+// 47
+void CPU::incDi() {
+    tmp_d = regs.di + 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.di) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.di ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.di += 1;
+    flagCSZP<uword, false>(regs.di);
+    incIP(1);
+}
+
+// 48
+void CPU::decAx() {
+    tmp_d = regs.ax - 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.ax) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.ax ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.ax -= 1;
+    flagCSZP<uword, false>(regs.ax);
+    incIP(1);
+
+}
+
+// 49
+void CPU::decCx() {
+    tmp_d = regs.cx - 1;
+    
+    regs.flags[OF] = ((tmp_d ^ regs.cx) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.cx ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.cx -= 1;
+    flagCSZP<uword, false>(regs.cx);
+    incIP(1);
+}
+
+// 4A
+void CPU::decDx() {
+    tmp_d = regs.dx - 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.dx) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.dx ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.dx -= 1;
+    flagCSZP<uword, false>(regs.dx);
+    incIP(1);
+}
+
+// 4B
+void CPU::decBx() {
+    tmp_d = regs.bx - 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.bx) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.bx ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.bx -= 1;
+    flagCSZP<uword, false>(regs.bx);
+    incIP(1);
+}
+
+// 4C
+void CPU::decSp() {
+    tmp_d = regs.sp - 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.sp) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.sp ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.sp -= 1;
+    flagCSZP<uword, false>(regs.sp);
+    incIP(1);
+}
+
+// 4D
+void CPU::decBp() {
+    tmp_d = regs.bp - 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.bp) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.bp ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.bp -= 1;
+    flagCSZP<uword, false>(regs.bp);
+    incIP(1);
+}
+
+// 4E
+void CPU::decSi() {
+    tmp_d = regs.si - 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.si) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.si ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.si -= 1;
+    flagCSZP<uword, false>(regs.si);
+    incIP(1);
+}
+
+// 4F
+void CPU::decDi() {
+    tmp_d = regs.di - 1;
+
+    regs.flags[OF] = ((tmp_d ^ regs.di) & (tmp_d ^ 1) & 0x8000) == 0x8000;
+    regs.flags[AF] = ((regs.di ^ 1 ^ tmp_d) & 0x10) == 0x10;
+
+    regs.di -= 1;
+    flagCSZP<uword, false>(regs.di);
+    incIP(1);
+}
+
+
+// 50
+void CPU::pushAx() {
+    push<uword, 2>(regs.ax);
+    incIP(1);
+}
+
+// 51
+void CPU::pushCx() {
+    push<uword, 2>(regs.cx);
+    incIP(1);
+}
+
+// 52
+void CPU::pushDx() {
+    push<uword, 2>(regs.dx);
+    incIP(1);
+}
+
+// 53
+void CPU::pushBx() {
+    push<uword, 2>(regs.bx);
+    incIP(1);
+}
+
+// 54
+void CPU::pushSp() {
+    push<uword, 2>(regs.sp);
+    incIP(1);
+}
+
+// 55
+void CPU::pushBp() {
+    push<uword, 2>(regs.bp);
+    incIP(1);
+}
+
+// 56
+void CPU::pushSi() {
+    push<uword, 2>(regs.si);
+    incIP(1);
+}
+
+// 57
+void CPU::pushDi() {
+    push<uword, 2>(regs.di);
+    incIP(1);
+}
+
+// 58
+void CPU::popAx() {
+    regs.ax = pop<uword, 2>();
+    incIP(1);
+}
+
+// 59
+void CPU::popCx() {
+    regs.cx = pop<uword, 2>();
+    incIP(1);
+}
+
+// 5A
+void CPU::popDx() {
+    regs.dx = pop<uword, 2>();
+    incIP(1);
+}
+
+// 5B
+void CPU::popBx() {
+    regs.bx = pop<uword, 2>();
+    incIP(1);
+}
+
+// 5C
+void CPU::popSp() {
+    regs.sp = pop<uword, 2>();
+    incIP(1);
+}
+
+// 5D
+void CPU::popBp() {
+    regs.bp = pop<uword, 2>();
+    incIP(1);
+}
+
+// 5E
+void CPU::popSi() {
+    regs.si = pop<uword, 2>();
+    incIP(1);
+}
+
+// 5F
+void CPU::popDi() {
+    regs.di = pop<uword, 2>();
+    incIP(1);
+}
+
+// 70
+void CPU::jo() {
+    if(regs.flags[OF]) 
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 71
+void CPU::jno() {
+    if(!regs.flags[OF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 72
+void CPU::jb() {
+    if(regs.flags[CF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 73
+void CPU::jnb() {
+    if(!regs.flags[CF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 74
+void CPU::jz() {
+    if(regs.flags[ZF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 75
+void CPU::jnz() {
+    if(!regs.flags[ZF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 76
+void CPU::jbe() {
+    if(regs.flags[CF] || regs.flags[ZF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 77
+void CPU::ja() {
+    if(!regs.flags[CF] && !regs.flags[ZF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 78
+void CPU::js() {
+    if(regs.flags[SF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 79
+void CPU::jns() {
+    if(!regs.flags[SF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 7A
+void CPU::jpe() {
+    if(regs.flags[PF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 7B
+void CPU::jpo() {
+    if(!regs.flags[PF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 7C
+void CPU::jl() {
+    if(regs.flags[SF] != regs.flags[OF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 7D
+void CPU::jge() {
+    if(regs.flags[SF] == regs.flags[OF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 7E
+void CPU::jle() {
+    if( (regs.flags[ZF] != regs.flags[OF]) || (regs.flags[SF] != regs.flags[OF]) )
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+// 7F
+void CPU::jg() {
+    if(!regs.flags[ZF] && regs.flags[SF] == regs.flags[OF])
+        regs.ip = IPReal = (ubyte) ((memory.getRawData<ubyte, 1, 0>(IPReal) + 2) + regs.ip);
+}
+
+void CPU::grp1EbIb() {
+    mod.decode(memory[IPReal+1]);
+
+}
 

@@ -30,11 +30,9 @@ public:
     Overrides ovrd;
 
     ubyte* lhs_b, *rhs_b;
-    ubyte  lhs_buf_b, rhs_buf_b; 
     uword  tmp_w;
 
     uword* lhs_w, *rhs_w;
-    uword  lhs_buf_w, rhs_buf_w;
     dword  tmp_d;
    
 
@@ -58,7 +56,7 @@ public:
     template<bool, bool>
     void setOperands();
     
-    template<typename T, bool withCarry = true, bool isLogicOp = false>
+    template<typename T, bool withCarry = true>
     inline void flagCSZP(T);
 
     template<typename T>
@@ -66,8 +64,6 @@ public:
 
     void incIP(unsigned int);
     dword getAbs(uword, uword);
-
-// ****************************** 
 
     inline void addEbGb();      // 0x00
     inline void addEvGv();      // 0x01
@@ -142,7 +138,62 @@ public:
     inline void cmpAlIb();      // 0x3C
     inline void cmpAxIv();      // 0x3D
 
-// ****************************** 
+    inline void aas();          // 0x3F
+
+    inline void incAx();        // 0x40
+    inline void incCx();        // 0x41
+    inline void incDx();        // 0x42
+    inline void incBx();        // 0x43
+    inline void incSp();        // 0x44
+    inline void incBp();        // 0x45
+    inline void incSi();        // 0x46
+    inline void incDi();        // 0x47
+    
+    inline void decAx();        // 0x48
+    inline void decCx();        // 0x49
+    inline void decDx();        // 0x4A
+    inline void decBx();        // 0x4B
+    inline void decSp();        // 0x4C
+    inline void decBp();        // 0x4D
+    inline void decSi();        // 0x4E
+    inline void decDi();        // 0x4F
+
+    inline void pushAx();       // 0x50
+    inline void pushCx();       // 0x51
+    inline void pushDx();       // 0x52
+    inline void pushBx();       // 0x53
+    inline void pushSp();       // 0x54
+    inline void pushBp();       // 0x55
+    inline void pushSi();       // 0x56
+    inline void pushDi();       // 0x57
+
+    inline void popAx();        // 0x58
+    inline void popCx();        // 0x59
+    inline void popDx();        // 0x5A
+    inline void popBx();        // 0x5B
+    inline void popSp();        // 0x5C
+    inline void popBp();        // 0x5D
+    inline void popSi();        // 0x5E
+    inline void popDi();        // 0x5F
+
+    inline void jo();           // 0x70
+    inline void jno();          // 0x71
+    inline void jb();           // 0x72
+    inline void jnb();          // 0x73
+    inline void jz();           // 0x74
+    inline void jnz();          // 0x75
+    inline void jbe();          // 0x76
+    inline void ja();           // 0x77
+    inline void js();           // 0x78
+    inline void jns();          // 0x79
+    inline void jpe();          // 0x7A
+    inline void jpo();          // 0x7B
+    inline void jl();           // 0x7C
+    inline void jge();          // 0x7D
+    inline void jle();          // 0x7E
+    inline void jg();           // 0x7F
+
+    inline void grp1EbIb();     // 0x80
 
     /* Lookups */
     std::unordered_map<int, ubyte*> byteRegs {
