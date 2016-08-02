@@ -18,7 +18,6 @@
 #define IS_WORD(x)     ( x & 1 )
 
 enum Operand {
-          
     /* Immediates */
     IMM_IB, IMM_IV,                 
     IMM_ONE, 
@@ -38,11 +37,9 @@ enum Operand {
     
     /* None */
     NONE
-
 };
 
 enum EncodeType{
-
     IMM_ENC,
     JMP_ENC,
     GRP_ENC,
@@ -58,7 +55,6 @@ enum EncodeType{
     MODRM_ONE_ARG,         
     AXAL_SEG_OFF_ENC,      
     RAW_SEG_RAW_OFF_ENC,     
-
 };
 
 struct Opcode {

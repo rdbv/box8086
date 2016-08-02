@@ -22,13 +22,11 @@ struct Overrides {
     /* Set overrides from memory beginning at address counter */
 
     void setOverrides(unsigned int counter, uint8_t* memory) {    
-       
         assert(memory != nullptr);
 
         enum regOvrType { REGISTER_OVERRIDE, REP_OVERRIDE, LOCK_OVERRIDE, NOT_OVERRIDE };
 
             /* Detect override type */
-
             auto isOverrideOpcode = [this, &counter, memory]() {
                 if(memory[counter] == CS_OVR || memory[counter] == DS_OVR ||
                    memory[counter] == ES_OVR || memory[counter] == SS_OVR) 
@@ -46,7 +44,6 @@ struct Overrides {
         regOvrType ovr;
         
         while( (ovr = isOverrideOpcode()) != NOT_OVERRIDE ) {        
-            
             if(ovr == REGISTER_OVERRIDE) 
                 regOverride  = memory[counter];
             
@@ -57,7 +54,6 @@ struct Overrides {
                 lockOverride = memory[counter];
             
             counter++;
-        
         }
 
     }    

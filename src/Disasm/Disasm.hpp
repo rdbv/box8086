@@ -10,11 +10,10 @@
 #include "../CPU/Overrides.hpp"
 
 #define BUF_LEN 32
-#define GET_BYTE(x) (memory[position+x])
+#define GET_BYTE(x)   (memory[position+x])
 #define GET_WORD(x,y) ((memory[position+x]<<8)|memory[position+y])
 
 static std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> mrm {
-
     { 
         NO_DISPLACEMENT,
         {
@@ -55,11 +54,9 @@ static std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> mrm {
 
         }
     }
-
 };
 
 static std::unordered_map<ubyte, std::unordered_map<uword, std::string>> regs {
-
     {
        0,
        {
@@ -95,7 +92,6 @@ static std::unordered_map<ubyte, std::unordered_map<uword, std::string>> regs {
             {SS, "ss"},
         }
     }
-
 };
 
 static std::unordered_map<ubyte, std::string> regSeg {
@@ -160,7 +156,8 @@ private:
     
     void disasmModRMOne(bool, Operand, std::string&); 
     void disasmRegImm(bool, Operand, std::string&);
-   
+
+    void disasmRawSegRawOff(std::string&);
 
     std::string getModRMDisplacement();
     std::pair<std::string, std::string> getOverrides();

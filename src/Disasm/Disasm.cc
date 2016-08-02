@@ -1,14 +1,11 @@
 #include "Disasm.hpp" 
 
 void Disasm::bindMemory(ubyte* mem) {
-    
     assert(mem != nullptr);
     memory = mem;
-
 }
 
 std::vector<InstrData> Disasm::disasm(unsigned int absAddr, unsigned int count) {
-    
     assert(absAddr < DEFAULT_MEMORY_SIZE);
 
     std::vector<InstrData> instr;
@@ -25,20 +22,33 @@ std::vector<InstrData> Disasm::disasm(unsigned int absAddr, unsigned int count) 
     return instr;
 }
 
+/* 
+ * Main disassembly function, identify 
+ * instruction, and disasm 
+ */
 std::string Disasm::disasm(unsigned int& instrSize) {
-    
     std::string inst;
+
     /* Reset overrides */
     ovr.clear();
+
     /* Fetch overrides */
     ovr.setOverrides(position, memory);
+
     /* Skip overrides */ 
     position += ovr.getOverrideCount();
+
     /* Fetch byte from memory */
     ubyte opByte = memory[position];
+
     /* Get opcode data from lookup */ 
     Opcode opData = opcodes[opByte];
 
+    /* 
+     * If is not group encoded instruction,
+     * then add instruction mnemonic (add, sub, jmp) to
+     * instr string
+     */
     if(opData.enc != GRP_ENC)
        inst += opData.instr;
 
@@ -46,7 +56,6 @@ std::string Disasm::disasm(unsigned int& instrSize) {
 
     /* Decode */
     switch(opData.enc) {
-  
         /* 0 Arguments, only opcode */
         case REG_REG_ENC:
         case ONE_BYTE_ENC:
@@ -113,13 +122,14 @@ std::string Disasm::disasm(unsigned int& instrSize) {
 
 }
 
-/* Disasm immediate instruction
+/* 
+ * Disasm immediate instruction
  * ex. int 0x30
  */
 
 void Disasm::disasmImm(bool isWord, std::string& instr) {
-
     char buf[BUF_LEN];
+    auto overrides = getOverrides();
 
     if(!isWord) 
         snprintf(buf, BUF_LEN, "%#x", GET_BYTE(1) );
@@ -127,9 +137,11 @@ void Disasm::disasmImm(bool isWord, std::string& instr) {
         snprintf(buf, BUF_LEN, "%#x", GET_WORD(2, 1) );
 
     instr += " " + std::string(buf);
+    instr = overrides.first + overrides.second + instr;
 }
 
-/* Disasm jmp instruction
+/* 
+ * Disasm jmp instruction
  * ex. jmp <label>
  * is needed to calculate absolute address by
  * absolute_value = (signed) value + byteNo + jmp_instr_size
@@ -137,7 +149,6 @@ void Disasm::disasmImm(bool isWord, std::string& instr) {
  */
 
 void Disasm::disasmJmp(bool isWord, std::string& instr) {
-
     char buf[BUF_LEN];
 
     if(!isWord) {
@@ -154,7 +165,6 @@ void Disasm::disasmJmp(bool isWord, std::string& instr) {
 
 
 void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
-
     Opcode _op = grp[op.group][mod.reg.to_ulong()];
    
     instr += _op.instr;
@@ -163,8 +173,7 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
         disasmModRMImm(IS_WORD(opbyte), op.rhs == IMM_IV, instr);
         position += mod.getModInstrSize(op.rhs == IMM_IV?2:1);
     }
-
-    if(_op.enc == MODRM_ARG_ONE || _op.enc == MODRM_ONE_ARG) {
+    else if(_op.enc == MODRM_ARG_ONE || _op.enc == MODRM_ONE_ARG) {
         disasmModRMOne(IS_WORD(opbyte), op.rhs, instr);
         position += mod.getModInstrSize(0); 
     }
@@ -172,12 +181,10 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
 }
 
 void Disasm::disasmModRM(bool toRegister, bool isWord, bool isMemOperation, std::string& instr) {
-
     std::string lhs, rhs; 
     auto overrides = getOverrides();
    
     /* From register to regsiter */
-
     if(mod.mode == REGISTER_MODE) {
         if(!toRegister) {
             lhs = regs[isWord][mod.rm.to_ulong()];
@@ -207,15 +214,15 @@ void Disasm::disasmModRM(bool toRegister, bool isWord, bool isMemOperation, std:
 
 
     if(!memSideLeft) 
-        instr = overrides.first + instr + " " + lhs + ", " + overrides.second + rhs + getModRMDisplacement(); 
+        instr = overrides.first + instr + " " + lhs + ", " + 
+                overrides.second + rhs + getModRMDisplacement(); 
     else 
-        instr = overrides.first + instr + " " + overrides.second + lhs + getModRMDisplacement() + ", " + rhs;  
+        instr = overrides.first + instr + " " + 
+                overrides.second + lhs + getModRMDisplacement() + ", " + rhs;  
     
-
 }
 
 void Disasm::disasmModRMSeg(bool toSegmentRegister, std::string& instr) {
-
     std::string lhs, rhs;
     auto overrides = getOverrides();
     
@@ -245,13 +252,14 @@ void Disasm::disasmModRMSeg(bool toSegmentRegister, std::string& instr) {
     }
    
     if(!memSideLeft) 
-        instr = overrides.first + instr + " " + lhs + ", " + overrides.second + rhs + getModRMDisplacement(); 
+        instr = overrides.first + instr + " " + lhs + ", " + 
+                overrides.second + rhs + getModRMDisplacement(); 
     else 
-        instr = overrides.first + instr + " " + overrides.second + lhs + getModRMDisplacement() + ", " + rhs;  
+        instr = overrides.first + instr + " " + 
+                overrides.second + lhs + getModRMDisplacement() + ", " + rhs;  
 }
 
 void Disasm::disasmModRMImm(bool isWord, bool isImmWord, std::string& instr) {
- 
     char buf[BUF_LEN] = {0};
     
     std::string lhs;
@@ -260,7 +268,8 @@ void Disasm::disasmModRMImm(bool isWord, bool isImmWord, std::string& instr) {
     if(!isWord || !isImmWord) 
         sprintf(buf, "%#x", memory[position+mod.getDisplacementSize(1)+1]);
     else if(isWord || isImmWord) {
-        uword imm = memory[position+mod.getDisplacementSize(1)+2] << 8 | memory[position+mod.getDisplacementSize(1)+1];
+        uword imm = memory[position+mod.getDisplacementSize(1)+2] << 8 | 
+                    memory[position+mod.getDisplacementSize(1)+1];
         sprintf(buf, "%#x", imm);
     }
 
@@ -269,11 +278,11 @@ void Disasm::disasmModRMImm(bool isWord, bool isImmWord, std::string& instr) {
     else
         lhs = regs[isWord][mod.rm.to_ulong()];
 
-    instr = overrides.first + instr + " " + overrides.second + lhs + getModRMDisplacement() + ", " + buf;
+    instr = overrides.first + instr + " " + 
+            overrides.second + lhs + getModRMDisplacement() + ", " + buf;
 }
 
 void Disasm::disasmRegImm(bool isWord, Operand lhs, std::string& instr) {
-    
     char buf[BUF_LEN] = {0};
     
     if(!isWord) 
@@ -282,11 +291,9 @@ void Disasm::disasmRegImm(bool isWord, Operand lhs, std::string& instr) {
         snprintf(buf, BUF_LEN, "%#x", GET_WORD(2, 1) );
 
     instr += " " + regsHelper[lhs] + ", " + std::string(buf);
-
 }
 
 void Disasm::disasmModRMOne(bool isWord, Operand rhsSelector, std::string& instr) {
-
     std::string lhs, rhs;
 
     auto overrides = getOverrides();
@@ -304,11 +311,9 @@ void Disasm::disasmModRMOne(bool isWord, Operand rhsSelector, std::string& instr
         rhs = ", cl";
 
     instr = overrides.first + instr + " " + overrides.second + lhs + getModRMDisplacement() + rhs;
-
 }
 
 std::string Disasm::getModRMDisplacement() {
-
     char buf[BUF_LEN] = {0};
 
     /* 

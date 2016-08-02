@@ -31,7 +31,7 @@ int main() {
     Disasm dis;
     dis.bindMemory(bytes);
 
-    auto instr = dis.disasm(0x0000, 50);
+    auto instr = dis.disasm(0x0000, 20);
     for(const auto& i : instr) {
         printf("%d:%s\n", i.position, i.instr.c_str());  
     }
