@@ -10,7 +10,7 @@ uint8_t* loadFile(const std::string& fileName, unsigned int* fileSize) {
     FILE* f = fopen(fileName.c_str(), "rb");
     if(f == NULL) {
         printf("Unable to open");
-        return 0;
+        return nullptr;
     }
     fseek(f, 0, SEEK_END);
     *fileSize = ftell(f); 
@@ -26,7 +26,7 @@ uint8_t* loadFile(const std::string& fileName, unsigned int* fileSize) {
 int main() {
    
     unsigned int fileSize;
-    ubyte* bytes = loadFile("../test.bin", &fileSize);
+    ubyte* bytes = loadFile("bin/test.bin", &fileSize);
 
     Disasm dis;
     dis.bindMemory(bytes);
