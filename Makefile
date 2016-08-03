@@ -42,6 +42,7 @@ Memory:
 Disasm:
 	# Compiling Disasm
 	@$(CC) $(CFLAGS) $(SRC_DIR)/Disasm/Disasm.cc -c -o bin/Disasm.o 
+	@$(CC) $(CFLAGS)  $(SRC_DIR)/main.cpp -o bin/main bin/Disasm.o
 
 clean:
 	@find bin -maxdepth 1 -type f -exec rm -f {} \;

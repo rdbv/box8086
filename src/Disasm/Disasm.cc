@@ -1,9 +1,16 @@
 #include "Disasm.hpp" 
 
+/* Bind memory with code */
+
 void Disasm::bindMemory(ubyte* mem) {
     assert(mem != nullptr);
     memory = mem;
 }
+
+/* 
+ * Set beginning address for disassembly,
+ * Set count of instructions for disassembly
+ */
 
 std::vector<InstrData> Disasm::disasm(unsigned int absAddr, unsigned int count) {
     assert(absAddr < DEFAULT_MEMORY_SIZE);
@@ -13,10 +20,11 @@ std::vector<InstrData> Disasm::disasm(unsigned int absAddr, unsigned int count) 
 
     unsigned int pos = 0;
     unsigned int instrSize = 0;
+    Overrides ov;
     for(unsigned int i=0;i<count;++i) {
         pos = position; 
-        std::string in = disasm(instrSize);
-        instr.push_back(InstrData{pos, instrSize, in});
+        std::string in = disasm(instrSize, ov);
+        instr.push_back(InstrData{pos, instrSize, in, ov});
     }
 
     return instr;
@@ -26,7 +34,8 @@ std::vector<InstrData> Disasm::disasm(unsigned int absAddr, unsigned int count) 
  * Main disassembly function, identify 
  * instruction, and disasm 
  */
-std::string Disasm::disasm(unsigned int& instrSize) {
+
+std::string Disasm::disasm(unsigned int& instrSize, Overrides& ov) {
     std::string inst;
 
     /* Reset overrides */
@@ -53,12 +62,14 @@ std::string Disasm::disasm(unsigned int& instrSize) {
        inst += opData.instr;
 
     instrSize = position;
+    ov = ovr;
 
     /* Decode */
     switch(opData.enc) {
         /* 0 Arguments, only opcode */
         case REG_REG_ENC:
         case ONE_BYTE_ENC:
+            disasmOneByte(inst);
             position++;
             break;
 
@@ -106,6 +117,10 @@ std::string Disasm::disasm(unsigned int& instrSize) {
             break;
 
         case RAW_SEG_RAW_OFF_ENC:
+            disasmRawSegRawOff(inst);
+            position += 5;
+            break;
+
         case AXAL_SEG_OFF_ENC:
         case MODRM_ONE_ARG:
         case MODRM_ARG_ONE:
@@ -117,9 +132,18 @@ std::string Disasm::disasm(unsigned int& instrSize) {
     instrSize -= position;
     instrSize = -instrSize;
     instrSize += ovr.getOverrideCount();
-
+    
     return inst;
 
+}
+
+/*
+ * Just add override prefixes
+ */
+
+void Disasm::disasmOneByte(std::string& instr) {
+    auto overrides = getOverrides();
+    instr = overrides.first + instr; 
 }
 
 /* 
@@ -172,12 +196,16 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
     if(_op.enc == MODRM_IMM_ENC) {
         disasmModRMImm(IS_WORD(opbyte), op.rhs == IMM_IV, instr);
         position += mod.getModInstrSize(op.rhs == IMM_IV?2:1);
+        return;
     }
     else if(_op.enc == MODRM_ARG_ONE || _op.enc == MODRM_ONE_ARG) {
         disasmModRMOne(IS_WORD(opbyte), op.rhs, instr);
         position += mod.getModInstrSize(0); 
+        return;
     }
-    
+
+    /* Unhandled group instructions */
+    assert(false);
 }
 
 void Disasm::disasmModRM(bool toRegister, bool isWord, bool isMemOperation, std::string& instr) {
@@ -266,11 +294,11 @@ void Disasm::disasmModRMImm(bool isWord, bool isImmWord, std::string& instr) {
     auto overrides = getOverrides();
 
     if(!isWord || !isImmWord) 
-        sprintf(buf, "%#x", memory[position+mod.getDisplacementSize(1)+1]);
+        snprintf(buf, BUF_LEN, "%#x", memory[position+mod.getDisplacementSize(1)+1]);
     else if(isWord || isImmWord) {
         uword imm = memory[position+mod.getDisplacementSize(1)+2] << 8 | 
                     memory[position+mod.getDisplacementSize(1)+1];
-        sprintf(buf, "%#x", imm);
+        snprintf(buf, BUF_LEN, "%#x", imm);
     }
 
     if(mod.mode != REGISTER_MODE)
@@ -313,6 +341,22 @@ void Disasm::disasmModRMOne(bool isWord, Operand rhsSelector, std::string& instr
     instr = overrides.first + instr + " " + overrides.second + lhs + getModRMDisplacement() + rhs;
 }
 
+void Disasm::disasmRawSegRawOff(std::string& instr) {
+    std::string lhs;
+    char buf[BUF_LEN] = {0};
+
+    auto overrides = getOverrides();
+
+    uword segment, offset;
+    segment = memory[position+2] << 8 | memory[position+1];
+    offset  = memory[position+2] << 8 | memory[position+1];
+    
+    snprintf(buf, BUF_LEN, "%#x:%#x", segment, offset);
+    
+    instr += " " + std::string(buf);
+    instr = overrides.first + instr;
+}
+
 std::string Disasm::getModRMDisplacement() {
     char buf[BUF_LEN] = {0};
 
@@ -330,12 +374,12 @@ std::string Disasm::getModRMDisplacement() {
 
     if(mod.mode == BYTE_DISPLACEMENT) {
         int8_t value = GET_BYTE(2);
-        sprintf(buf, "%c%#x]", (value<0)?'-':'+', value<0?-value:value);
+        snprintf(buf, BUF_LEN, "%c%#x]", (value<0)?'-':'+', value<0?-value:value);
     }
 
     if(mod.mode == WORD_DISPLACEMENT) {
         int16_t value = GET_WORD(3, 2); 
-        sprintf(buf, "%c%#x]", (value<0)?'-':'+', value<0?-value:value);
+        snprintf(buf, BUF_LEN, "%c%#x]", (value<0)?'-':'+', value<0?-value:value);
     }
 
     return buf;

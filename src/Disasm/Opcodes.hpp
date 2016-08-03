@@ -39,7 +39,7 @@ enum Operand {
     NONE
 };
 
-enum EncodeType{
+enum EncodeType {
     IMM_ENC,
     JMP_ENC,
     GRP_ENC,

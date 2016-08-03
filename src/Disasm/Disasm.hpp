@@ -128,6 +128,7 @@ struct InstrData {
     unsigned int position;
     unsigned int size;
     std::string instr;
+    Overrides ovr;
 };
 
 class Disasm {
@@ -143,9 +144,9 @@ private:
     ModRM mod;
     Overrides ovr;
 
+    std::string disasm(unsigned int&, Overrides&);
 
-    std::string disasm(unsigned int&);
-
+    void disasmOneByte(std::string&); 
     void disasmImm(bool, std::string&);
     void disasmJmp(bool, std::string&); 
     void disasmGrp(Opcode&, ubyte&, std::string&);
@@ -156,7 +157,6 @@ private:
     
     void disasmModRMOne(bool, Operand, std::string&); 
     void disasmRegImm(bool, Operand, std::string&);
-
     void disasmRawSegRawOff(std::string&);
 
     std::string getModRMDisplacement();

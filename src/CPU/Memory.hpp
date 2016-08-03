@@ -16,7 +16,6 @@ public:
 
     template<typename T, unsigned int first, unsigned int second>
     inline T getRawData(int offset) { 
-          
         const bool isByte = std::is_same<T, ubyte>() || std::is_same<T, sbyte>();
         const bool isWord = std::is_same<T, uword>() || std::is_same<T, sword>(); 
         static_assert(isByte ^ isWord, "Bad size! (Or isByte and isWord equal true, so WTF?)");   
@@ -25,7 +24,6 @@ public:
             return _memory[offset + first]; 
         else 
             return _memory[offset + first] << 8 | _memory[offset + second];
-
     } 
 
 private:
