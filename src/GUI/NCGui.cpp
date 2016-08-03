@@ -1,37 +1,22 @@
 #include <stdio.h>
 #include <ncurses.h>
+#include <string.h>
 
 #include "../Disasm/Disasm.hpp"
 #include "../CPU/CPU.hpp"
 
 int main() {
-    
-    int ch;
+    char m[] = "String";
+    int r, c;
     initscr();
-    raw();
-    keypad(stdscr, TRUE);
-    noecho();
-    while(true) 
-    {
 
-    printw("Type any\n");
-    ch = getch();
-
-    if(ch == KEY_F(1))
-        printw("f1 kp");
-
-    else
-    {
-        printw("KP ");
-        attron(A_BOLD);
-        printw("%c", ch);
-        attroff(A_BOLD);
-    }
-    }
+    getmaxyx(stdscr, r, c);
+    
+    mvprintw(r/2, (c - strlen(m)) / 2, "%s %d %d", m, r, c);
 
     refresh();
     getch();
     endwin();
 
-    return 1;
 }
+

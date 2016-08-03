@@ -21,7 +21,6 @@ public:
 
 //private:
 
-
     dword IPReal = 0;
 
     ModRM     mod;
@@ -34,7 +33,6 @@ public:
 
     uword* lhs_w, *rhs_w;
     dword  tmp_d;
-   
 
     void fetch();
     void execute();
@@ -42,10 +40,8 @@ public:
 
     uword getOverridedSegmentValue();
     dword getAbsoluteAddressModRM();
-
     
     uword* getStackTopPtr();
-
 
     template<typename T, unsigned int>
     inline void push(T);

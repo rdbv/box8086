@@ -53,20 +53,20 @@ typedef uint32_t dword;
 #define DH_SI       0b110
 #define BH_DI       0b111
 
-#define ES AL_AX
-#define CS CL_CX
-#define SS DL_DX
-#define DS BL_BX
+#define ES          AL_AX
+#define CS          CL_CX
+#define SS          DL_DX
+#define DS          BL_BX
 
 /* Positions in FLAGS register */
-#define CF 0
-#define PF 2
-#define AF 4
-#define ZF 6
-#define SF 7
-#define TF 8
-#define IF 9
-#define DF 10
-#define OF 11
+#define CF          0
+#define PF          2
+#define AF          4
+#define ZF          6
+#define SF          7
+#define TF          8
+#define IF          9
+#define DF          10
+#define OF          11
 
 #endif
