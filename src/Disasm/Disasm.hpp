@@ -12,6 +12,25 @@
 #define BUF_LEN 32
 #define GET_BYTE(x)   (memory[position+x])
 #define GET_WORD(x,y) ((memory[position+x]<<8)|memory[position+y])
+#define DEBUG_DUMP_INFO
+
+static std::unordered_map<int, std::string> encode_debug {
+    {IMM_ENC, "IMM_ENC"},
+    {JMP_ENC, "JMP_ENC"},
+    {GRP_ENC, "GRP_ENC"},
+    {MODRM_ENC, "MODRM_ENC"},
+    {REG_REG_ENC, "REG_REG_ENC"},
+    {REG_IMM_ENC, "REG_IMM_ENC"},
+    {INVALID_ENC, "INVALID_ENC"},
+    {ONE_BYTE_ENC, "ONE_BYTE_ENC"},
+    {MODRM_MEM_ENC, "MODRM_MEM_ENC"},
+    {MODRM_SEG_ENC, "MODRM_SEG_ENC"},
+    {MODRM_IMM_ENC, "MODRM_IMM_ENC"},
+    {MODRM_ARG_ONE, "MODRM_ARG_ONE"},
+    {MODRM_ONE_ARG, "MODRM_ONE_ARG"},
+    {AXAL_SEG_OFF_ENC, "AXAL_SEG_OFF_ENC"},
+    {RAW_SEG_RAW_OFF_ENC, "RAW_SEG_RAW_OFF_ENC"}
+};
 
 static std::unordered_map<ubyte, std::unordered_map<ubyte, std::string>> mrm {
     { 
@@ -158,6 +177,7 @@ private:
     void disasmModRMOne(bool, Operand, std::string&); 
     void disasmRegImm(bool, Operand, std::string&);
     void disasmRawSegRawOff(std::string&);
+    void disasmAxAlSegOff(bool, bool, std::string&);
 
     std::string getModRMDisplacement();
     std::pair<std::string, std::string> getOverrides();

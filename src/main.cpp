@@ -22,21 +22,18 @@ uint8_t* loadFile(const std::string& fileName, unsigned int* fileSize) {
 
 }
 
-
 int main() {
-   
     unsigned int fileSize;
     ubyte* bytes = loadFile("bin/test.bin", &fileSize);
 
     Disasm dis;
     dis.bindMemory(bytes);
 
-    auto instr = dis.disasm(0x0000, 20);
+    auto instr = dis.disasm(0x0000, 10);
     for(const auto& i : instr) {
         printf("%d:%s\n", i.position, i.instr.c_str());  
     }
 
     free(bytes);
-
 }
 

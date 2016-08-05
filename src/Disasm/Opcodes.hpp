@@ -306,7 +306,7 @@ static Opcode opcodes[256] = {
     Opcode{"out",  REG_DX, REG_AL, ONE_BYTE_ENC, GRP_NONE, 1} ,       
     Opcode{"out", REG_DX, REG_AX, ONE_BYTE_ENC, GRP_NONE, 1} ,  
     Opcode{"lock", NONE, NONE, INVALID_ENC, GRP_NONE, 1} ,         
-    Opcode{"invalID", NONE, NONE, INVALID_ENC, GRP_NONE, 1} ,  
+    Opcode{"invalid", NONE, NONE, INVALID_ENC, GRP_NONE, 1} ,  
     Opcode{"repnz ",  NONE, NONE, INVALID_ENC, GRP_NONE, 1} ,       
     Opcode{"repz ",  NONE, NONE, INVALID_ENC, GRP_NONE, 1} ,         
     Opcode{"hlt", NONE, NONE, ONE_BYTE_ENC, GRP_NONE, 1} ,            
@@ -324,7 +324,6 @@ static Opcode opcodes[256] = {
 };
 
 static std::unordered_map<ubyte, std::unordered_map<ubyte, Opcode>> grp {
-    
     {
         GRP1,
         {
@@ -352,7 +351,7 @@ static std::unordered_map<ubyte, std::unordered_map<ubyte, Opcode>> grp {
         } 
     },
     {
-        GRP3a,
+         GRP3a,
          {
             {0b000, Opcode{"test",NONE, IMM_IB, MODRM_IMM_ENC} },
             {0b001, Opcode{"bad", NONE, NONE, INVALID_ENC} },
@@ -364,12 +363,11 @@ static std::unordered_map<ubyte, std::unordered_map<ubyte, Opcode>> grp {
             {0b111, Opcode{"idiv",NONE, NONE, MODRM_ONE_ARG} },
          } 
     },
-    
     {
         GRP3b, 
         {
             {0b000, Opcode{"test",NONE, IMM_IV, MODRM_IMM_ENC} },
-            {0b001, Opcode{"",    NONE, NONE, INVALID_ENC} },
+            {0b001, Opcode{"bad", NONE, NONE, INVALID_ENC} },
             {0b010, Opcode{"not", NONE, NONE, MODRM_ONE_ARG} },
             {0b011, Opcode{"neg", NONE, NONE, MODRM_ONE_ARG} },
             {0b100, Opcode{"mul", NONE, NONE, MODRM_ONE_ARG} },
@@ -401,10 +399,9 @@ static std::unordered_map<ubyte, std::unordered_map<ubyte, Opcode>> grp {
             {0b100, Opcode{"jmp", NONE, NONE, MODRM_ONE_ARG} },
             {0b101, Opcode{"jmp", IMM_IB, NONE, INVALID_ENC} },        
             {0b110, Opcode{"push",NONE, NONE, MODRM_ONE_ARG} },
-            {0b111, Opcode{"", NONE, NONE, INVALID_ENC} },
+            {0b111, Opcode{"bad", NONE, NONE, INVALID_ENC} },
         } 
     }
-
 };
 
 #endif

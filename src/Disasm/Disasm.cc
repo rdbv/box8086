@@ -64,8 +64,11 @@ std::string Disasm::disasm(unsigned int& instrSize, Overrides& ov) {
     instrSize = position;
     ov = ovr;
 
+    //printf("EncType:%s byte:%x\n", encode_debug[opData.enc].c_str(), opByte);
+
     /* Decode */
     switch(opData.enc) {
+        
         /* 0 Arguments, only opcode */
         case REG_REG_ENC:
         case ONE_BYTE_ENC:
@@ -118,10 +121,14 @@ std::string Disasm::disasm(unsigned int& instrSize, Overrides& ov) {
 
         case RAW_SEG_RAW_OFF_ENC:
             disasmRawSegRawOff(inst);
-            position += 5;
+            position += opData.fullSize;
             break;
 
         case AXAL_SEG_OFF_ENC:
+            disasmAxAlSegOff(IS_WORD(opByte), TO_REGISTER(opByte), inst);
+            position += opData.fullSize;
+            break;
+
         case MODRM_ONE_ARG:
         case MODRM_ARG_ONE:
             assert(false);
@@ -134,7 +141,6 @@ std::string Disasm::disasm(unsigned int& instrSize, Overrides& ov) {
     instrSize += ovr.getOverrideCount();
     
     return inst;
-
 }
 
 /*
@@ -194,6 +200,7 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
     instr += _op.instr;
 
     if(_op.enc == MODRM_IMM_ENC) {
+        printf("is_word:%d rhs:%d\n", IS_WORD(opbyte), IMM_IV);
         disasmModRMImm(IS_WORD(opbyte), op.rhs == IMM_IV, instr);
         position += mod.getModInstrSize(op.rhs == IMM_IV?2:1);
         return;
@@ -203,6 +210,8 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
         position += mod.getModInstrSize(0); 
         return;
     }
+
+    printf("COP:%x\n", opbyte);
 
     /* Unhandled group instructions */
     assert(false);
@@ -310,15 +319,23 @@ void Disasm::disasmModRMImm(bool isWord, bool isImmWord, std::string& instr) {
             overrides.second + lhs + getModRMDisplacement() + ", " + buf;
 }
 
+/*
+ * ex. mov ax, <byte>/<word>
+ *     xor al, <byte>/<word> ... 
+ *     on ax/al all operations (xor,add,sub,mov) on other regs only mov)
+ */
+
 void Disasm::disasmRegImm(bool isWord, Operand lhs, std::string& instr) {
     char buf[BUF_LEN] = {0};
-    
+    auto overrides = getOverrides();
+
     if(!isWord) 
         snprintf(buf, BUF_LEN, "%#x", GET_BYTE(1) );
     else 
         snprintf(buf, BUF_LEN, "%#x", GET_WORD(2, 1) );
 
     instr += " " + regsHelper[lhs] + ", " + std::string(buf);
+    instr = overrides.first + instr;
 }
 
 void Disasm::disasmModRMOne(bool isWord, Operand rhsSelector, std::string& instr) {
@@ -348,12 +365,37 @@ void Disasm::disasmRawSegRawOff(std::string& instr) {
     auto overrides = getOverrides();
 
     uword segment, offset;
-    segment = memory[position+2] << 8 | memory[position+1];
+    segment = memory[position+4] << 8 | memory[position+3];
     offset  = memory[position+2] << 8 | memory[position+1];
     
     snprintf(buf, BUF_LEN, "%#x:%#x", segment, offset);
     
     instr += " " + std::string(buf);
+    instr = overrides.first + instr;
+}
+
+/*
+ * a0, a1
+ * mov ax/al, <addr_word>
+ * mov <addr_word>, ax, al
+ */
+
+void Disasm::disasmAxAlSegOff(bool isWord, bool toRegister,  std::string& instr) {
+    char buf[BUF_LEN] = {0};
+    auto overrides = getOverrides();
+
+    uword offset;
+    offset = memory[position+2] << 8 | memory[position+1];
+
+    snprintf(buf, BUF_LEN, "[%#x]", offset);
+
+    Operand reg = (isWord? REG_AX : REG_AL);
+
+    if(toRegister)  
+         instr += " " + regsHelper[reg] + ", " + overrides.second + std::string(buf);
+    else 
+         instr += " " + overrides.second + std::string(buf) + ", " + regsHelper[reg]; 
+
     instr = overrides.first + instr;
 }
 
