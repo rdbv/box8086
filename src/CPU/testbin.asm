@@ -1,14 +1,9 @@
 cpu 8086
 org 0x7c00
 
-mov cx, 13
-
-p:
-    mov al, cl
-    dec cx
-    cmp cx, 0
-    jne p
-
+db 0x73, 0x23
+times 160-2 db 0x90
+db 0x73, 0x00
 
 times 510 - ($-$$) db 0
 dw 0xAA55

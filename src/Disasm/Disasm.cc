@@ -116,7 +116,7 @@ std::string Disasm::disasm(unsigned int& instrSize, Overrides& ov) {
             break;
 
         case INVALID_ENC:
-            ++position;
+            position += opData.fullSize;
             break;
 
         case RAW_SEG_RAW_OFF_ENC:
@@ -182,7 +182,9 @@ void Disasm::disasmJmp(bool isWord, std::string& instr) {
     char buf[BUF_LEN];
 
     if(!isWord) {
-        sbyte rel = GET_BYTE(1) + position + 0x2;
+        sword rel = GET_BYTE(1) + position + 0x2;
+        if(rel < 0) {
+        }
         snprintf(buf, BUF_LEN, "%#x", (uword) rel);
     }
     else {
@@ -200,7 +202,7 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
     instr += _op.instr;
 
     if(_op.enc == MODRM_IMM_ENC) {
-        printf("is_word:%d rhs:%d\n", IS_WORD(opbyte), IMM_IV);
+        //printf("is_word:%d rhs:%d\n", IS_WORD(opbyte), IMM_IV);
         disasmModRMImm(IS_WORD(opbyte), op.rhs == IMM_IV, instr);
         position += mod.getModInstrSize(op.rhs == IMM_IV?2:1);
         return;
@@ -211,7 +213,7 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
         return;
     }
 
-    printf("COP:%x\n", opbyte);
+    printf("COP:%x pos:%#x\n", opbyte, position);
 
     /* Unhandled group instructions */
     assert(false);

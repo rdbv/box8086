@@ -5,14 +5,19 @@
 
 struct Overrides {
     
-    ubyte regOverride = 0;
-    ubyte repOverride = 0;
-    ubyte lockOverride = 0;    
+    ubyte regOverride = 0,  regOverrideCount  = 0;
+    ubyte repOverride = 0,  repOverrideCount  = 0;
+    ubyte lockOverride = 0, lockOverrideCount = 0;    
 
     /* Return overrides count for instruction */
 
     unsigned int getOverrideCount() {
         unsigned int counter=0;
+
+        if(regOverrideCount > 1 || repOverrideCount > 1 || lockOverrideCount > 1) {
+            return 0;
+        }
+
         if(regOverride != 0)  counter++;
         if(repOverride != 0)  counter++;
         if(lockOverride != 0) counter++;
@@ -45,14 +50,18 @@ struct Overrides {
         
         while( (ovr = isOverrideOpcode()) != NOT_OVERRIDE ) {        
             if(ovr == REGISTER_OVERRIDE) 
-                regOverride  = memory[counter];
+                regOverride  = memory[counter], regOverrideCount++;
             
             if(ovr == REP_OVERRIDE)      
-                repOverride  = memory[counter];
+                repOverride  = memory[counter], repOverrideCount++;
             
             if(ovr == LOCK_OVERRIDE)     
-                lockOverride = memory[counter];
-            
+                lockOverride = memory[counter], lockOverrideCount++;
+//
+//            printf("Wiem. reg:%d rep:%d lock:%d\n", regOverrideCount, 
+//                                                    repOverrideCount, 
+//                                                    lockOverrideCount); 
+//
             counter++;
         }
 
@@ -62,6 +71,7 @@ struct Overrides {
 
     inline void clear() {
         regOverride = repOverride = lockOverride = 0; 
+        regOverrideCount = 0, repOverrideCount = 0, lockOverrideCount = 0;
     }
 
 }; 

@@ -22,6 +22,8 @@ tests: TestCPU0
 main:
 	# Compiling main
 	@$(CC) $(CFLAGS)  $(SRC_DIR)/main.cpp -o bin/main $(MAIN_LINK)
+	#g++ $(CFLAGS) $(SRC_DIR)/main.cpp -o bin/main
+
 
 NCGui:
 	# Compiling NCGui
