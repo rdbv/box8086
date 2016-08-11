@@ -22,7 +22,8 @@ tests: TestCPU0
 main:
 	# Compiling main
 	@$(CC) $(CFLAGS)  $(SRC_DIR)/main.cpp -o bin/main $(MAIN_LINK)
-	#g++ $(CFLAGS) $(SRC_DIR)/main.cpp -o bin/main
+	echo $(MAIN_LINK)
+	#g++ $(CFLAGS) $(SRC_DIR)/main.cpp -o bin/main $(MAIN_LINK)
 
 
 NCGui:
@@ -46,38 +47,10 @@ Disasm:
 	@$(CC) $(CFLAGS) $(SRC_DIR)/Disasm/Disasm.cc -c -o bin/Disasm.o 
 	@$(CC) $(CFLAGS)  $(SRC_DIR)/main.cpp -o bin/main bin/Disasm.o
 
-clean:
-	@find bin -maxdepth 1 -type f -exec rm -f {} \;
-	@rm -f bin/tests_bin/*
-	# Cleaned...
+testbin:
+	nasm -f bin $(SRC_DIR)/CPU/testbin.asm -o bin/test.bin
 
 # Tests
 TestCPU0:
 	# Compiling TestCPU0
 	@$(CC) $(CFLAGS) $(TEST_DIR)/TestCPU0.cc -o $(TEST_BIN)/TestCPU0 -lboost_unit_test_framework $(MAIN_LINK)
-
-# For easy compiling in vim.
-
-CPU_vim: CPU 
-Memory_vim: Memory GUI
-Disasm_vim: Disasm main
-GUI_vim: GUI 
-NCGui_vim: NCGui
-testbin_vim: testbin
-Opcodes_vim: Disasm main
-main_vim: main
-bochs_vim: bochs
-TestCPU0_vim: TestCPU0
-
-#######################################################################
-
-# Binary tests stuff
-testbin:
-	# Assembling testbin
-	@$(AS) $(AFLAGS) $(CPU_DIR)/testbin.asm -o $(BIN_DIR)/test.bin
-
-bochs:
-	nasm -f bin ../bochs.asm -o $(BIN_DIR)/test.bin
-
-
-

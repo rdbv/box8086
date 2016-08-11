@@ -25,15 +25,18 @@ uint8_t* loadFile(const std::string& fileName, unsigned int* fileSize) {
 
 int main() {
     unsigned int fileSize;
+    unsigned int ww;
+    ww = 1250;
     ubyte* bytes = loadFile("bin/readme.exe", &fileSize);
+    //ww = 15; 
     //ubyte* bytes = loadFile("bin/test.bin", &fileSize);
 
     Disasm dis;
     dis.bindMemory(bytes);
 
-    auto instr = dis.disasm(0x0000, 0x30);
+    auto instr = dis.disasm(0x0000, ww);
     for(const auto& i : instr) {
-        printf("%4x:\t%s\n", i.position, i.instr.c_str());  
+        printf(" %4x:\t%s\n", i.position, i.instr.c_str());  
     }
 
     free(bytes);

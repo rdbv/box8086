@@ -183,8 +183,6 @@ void Disasm::disasmJmp(bool isWord, std::string& instr) {
 
     if(!isWord) {
         sword rel = GET_BYTE(1) + position + 0x2;
-        if(rel < 0) {
-        }
         snprintf(buf, BUF_LEN, "%#x", (uword) rel);
     }
     else {
@@ -213,10 +211,13 @@ void Disasm::disasmGrp(Opcode& op, ubyte& opbyte, std::string& instr) {
         return;
     }
 
-    printf("COP:%x pos:%#x\n", opbyte, position);
+
+    position++;
+    /* So instr is INVALID_ENC */
+    //printf("COP:%x pos:%#x\n", opbyte, position);
 
     /* Unhandled group instructions */
-    assert(false);
+    //assert(false);
 }
 
 void Disasm::disasmModRM(bool toRegister, bool isWord, bool isMemOperation, std::string& instr) {
@@ -357,7 +358,8 @@ void Disasm::disasmModRMOne(bool isWord, Operand rhsSelector, std::string& instr
     if(rhsSelector == REG_CL)
         rhs = ", cl";
 
-    instr = overrides.first + instr + " " + overrides.second + lhs + getModRMDisplacement() + rhs;
+    instr = overrides.first + instr + " " + 
+            overrides.second + lhs + getModRMDisplacement() + rhs;
 }
 
 void Disasm::disasmRawSegRawOff(std::string& instr) {

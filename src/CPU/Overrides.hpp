@@ -5,8 +5,8 @@
 
 struct Overrides {
     
-    ubyte regOverride = 0,  regOverrideCount  = 0;
-    ubyte repOverride = 0,  repOverrideCount  = 0;
+    ubyte regOverride  = 0, regOverrideCount  = 0;
+    ubyte repOverride  = 0, repOverrideCount  = 0;
     ubyte lockOverride = 0, lockOverrideCount = 0;    
 
     /* Return overrides count for instruction */
@@ -14,12 +14,11 @@ struct Overrides {
     unsigned int getOverrideCount() {
         unsigned int counter=0;
 
-        if(regOverrideCount > 1 || repOverrideCount > 1 || lockOverrideCount > 1) {
+        if(regOverrideCount > 1 || repOverrideCount > 1 || lockOverrideCount > 1) 
             return 0;
-        }
 
-        if(regOverride != 0)  counter++;
-        if(repOverride != 0)  counter++;
+        if(regOverride  != 0) counter++;
+        if(repOverride  != 0) counter++;
         if(lockOverride != 0) counter++;
         return counter; 
     }
